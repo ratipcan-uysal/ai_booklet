@@ -1,0 +1,160 @@
+% ======================================================================
+%  KAVRAM: Fine-tuning  (Tier 1)  — kompakt, tablo ağırlıklı
+% ======================================================================
+
+\concept{Training · Eğitim}{Fine-tuning}{Davranışı her çağrıda anlatmak yerine modelin ağırlıklarına işlemek}
+
+\stage{1}{Problem}
+Model istediğin gibi davranmıyor: format tutmuyor, marka tonunu yakalamıyor,
+alan jargonunu bilmiyor. Çözüm diye her prompt'a aynı uzun talimatları, aynı 10
+örneği dolduruyorsun --- token şişiyor, tutarlılık yine de oynuyor. Prompt
+mühendisliği bir tavana çarpıyor.
+
+\keyline{Soru: Bu davranışı her çağrıda yeniden \emph{anlatmak} mı, yoksa modele bir kez \emph{öğretmek} mi daha doğru?}
+
+\stage{2}{Neden Var}
+Bazı davranışlar prompt'ta tekrar tekrar açıklanmak yerine modelin kendisine
+gömülmelidir. Fine-tuning, modeli kendi örneklerinle yeniden eğiterek
+ağırlıklarını --- yani \emph{varsayılan davranışını} --- değiştirir. Böylece
+talimat prompt'tan çıkar, modelin doğasına geçer.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2010'lar} tam yeniden eğitim / transfer learning \tlsep \yr{2021} LoRA / PEFT: ucuz, ``adapter'' tabanlı fine-tune \tlsep \yr{2022} instruction tuning + RLHF: model talimat izlemeyi öğrenir \tlsep \yr{2024–26} yönetilen fine-tune API'leri yaygınlaşır
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Fine-tuning:} Önceden eğitilmiş bir modeli, kendi örnek veri kümen
+üzerinde eğitmeye devam ederek ağırlıklarını belirli bir davranış / üslup /
+format için ayarlama. \textbf{LoRA / PEFT:} tüm modeli değil, küçük bir
+``adapter'' katmanını eğiten ucuz varyant.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Prompt vermek, bir çalışana \textbf{her sabah talimat} vermektir. Fine-tuning,
+onu bir \textbf{kursa göndermektir}: davranış artık ikinci doğası olur, her gün
+anlatman gerekmez. Ama dezavantajı da kurs gibidir --- yeni \emph{bilgi} için
+her seferinde yeniden kursa göndermek pahalıdır ve çalışan bu sırada genel
+becerilerini kısmen ``unutabilir'' (\en{catastrophic forgetting}).
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=7mm,
+   box/.style={draw=accent, line width=0.8pt, fill=wash, rounded corners=2pt,
+               minimum height=10mm, minimum width=22mm, align=center},
+   io/.style={draw=softgray, fill=white, rounded corners=8pt, align=center,
+              minimum height=10mm, minimum width=22mm, inner sep=3pt},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+  \node[io] (base) {Temel model\\\textcolor{softgray}{genel}};
+  \node[io, below=8mm of base] (data) {Örnek veri\\\textcolor{softgray}{girdi→çıktı çiftleri}};
+  \node[box, right=12mm of base] (train) {Eğitim\\(LoRA / PEFT)};
+  \node[draw=accentdk, fill=accent!12, rounded corners=2pt, right=12mm of train,
+        minimum height=10mm, minimum width=24mm, align=center] (ft)
+        {Fine-tuned\\model};
+  \draw[flow] (base) -- (train);
+  \draw[flow] (data.east) -- ++(6mm,0) |- (train.south west);
+  \draw[flow] (train) -- (ft);
+\end{tikzpicture}
+\end{center}
+\keyline{Dikkat: çıktı yeni bir model (veya adapter) ağırlığıdır --- bir indeks değil. Bilgi değişince yeniden eğitmek gerekir.}
+
+\stage{7}{Karar Çerçevesi}
+İhtiyacın \emph{bilgi} mi, \emph{davranış} mı? Tek ayrım kararın çoğunu verir.
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=5mm and 8mm,
+   q/.style={draw=accent, line width=0.8pt, fill=wash, diamond, aspect=2.4,
+             align=center, inner sep=1pt, minimum width=30mm},
+   leaf/.style={draw=accentdk, line width=0.8pt, rounded corners=2pt,
+                fill=accent!12, align=center, inner sep=4pt, minimum width=22mm},
+   yes/.style={good, font=\sffamily\bfseries\scriptsize},
+   no/.style={warn, font=\sffamily\bfseries\scriptsize},
+   ed/.style={-{Stealth[length=2mm]}, softgray, line width=0.7pt}]
+  \node[q] (q1) {Değişen/güncel\\bilgi mi gerek?};
+  \node[leaf, below left=13mm and -2mm of q1] (rag) {\textbf{RAG}\\(fine-tune değil)};
+  \node[q, below right=13mm and -2mm of q1] (q2) {Yeterli kaliteli\\örnek var mı?};
+  \node[leaf, below left=13mm and 4mm of q2, minimum width=20mm] (prompt) {\textbf{Önce prompt}\\/ few-shot};
+  \node[leaf, below right=13mm and 4mm of q2, minimum width=20mm] (ft) {\textbf{Fine-tune}\\stil/format/davranış};
+  \draw[ed] (q1) -- node[yes,left]{Evet} (rag);
+  \draw[ed] (q1) -- node[no,right]{Hayır} (q2);
+  \draw[ed] (q2) -- node[no,left]{Hayır} (prompt);
+  \draw[ed] (q2) -- node[yes,right]{Evet} (ft);
+\end{tikzpicture}
+\end{center}
+\keyline{Kural: Önce prompt'u tüket. Fine-tuning'i yalnızca tutarlı davranış/üslup/format için, kanıtlanmış ihtiyaç varken kullan.}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Katı Format + Marka Tonu]
+\textbf{Bağlam.} Bir ürün, çıktıların \emph{her zaman} belirli bir JSON şemasında
+ve sabit bir marka tonunda olmasını istiyor. Prompt + few-shot ile \%95'e
+ulaşılıyor ama kalan \%5 hata production'da pahalı.
+
+\smallskip
+\textbf{Çözüm.} Birkaç bin temiz ``girdi→ideal çıktı'' çifti ile LoRA fine-tune.
+Bilgi hâlâ RAG'den geliyor; fine-tune yalnızca \emph{biçim ve tonu} garantiliyor.
+
+\smallskip
+\textbf{Sonuç.} Format hataları neredeyse sıfırlanıyor, prompt kısalıyor (talimat
+artık modelde), token maliyeti düşüyor. Bilgi RAG'de kaldığı için güncel.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Bilgi için Fine-tune'']
+Şirket dokümanlarını modele ``öğretmek'' için fine-tune yapmak. Bilgi
+ağırlıklara gömülünce: güncellenemez (her değişiklik = yeniden eğitim), kaynak
+gösterilemez, ve model yine de emin emin halüsinasyon yapar.
+
+\smallskip
+\textbf{Belirti:} ``Fine-tune ettik ama cevaplar eski/yanlış ve kaynaksız.''\\
+\textbf{Kök neden:} Bilgi problemi, davranış aracıyla çözülmeye çalışılmış.\\
+\textbf{Düzeltme:} Bilgi $\to$ RAG; davranış/format/üslup $\to$ fine-tune. İkisini karıştırma.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+Bu, kitabın en sık sorulan kararıdır. Tek tabloda:\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{24mm} L L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small } &
+{\sffamily\bfseries\small Prompt / few-shot} &
+{\sffamily\bfseries\small RAG} &
+{\sffamily\bfseries\small Fine-tuning} \\
+\midrule
+\textbf{Çözdüğü} & Hızlı yönlendirme & Güncel \emph{bilgi} & Kalıcı \emph{davranış} \\
+\addlinespace[2pt]
+\textbf{Güncelleme} & Anında & Anında (veri) & Yeniden eğitim \\
+\addlinespace[2pt]
+\textbf{Maliyet} & Düşük & Orta (altyapı) & Yüksek (eğitim) \\
+\addlinespace[2pt]
+\textbf{Kaynak gösterir} & Hayır & Evet & Hayır \\
+\addlinespace[2pt]
+\textbf{En iyi} & İlk deneme & Bilgi yoğun & Stil/format/ton \\
+\bottomrule
+\end{tabularx}
+\vspace{3pt}
+Gerçek sistemler genelde \textbf{RAG (bilgi) + hafif fine-tune (davranış)} birlikte kullanır.
+
+\stage{11}{İlişkili Kavramlar}
+\term{RAG} (bilgi tarafı) \tlsep \term{Prompt} (önce tüketilecek) \tlsep
+\term{LoRA / PEFT} (ucuz fine-tune) \tlsep \term{Distillation} (büyük modeli küçüğe öğretme) \tlsep
+\term{Eval} (fine-tune gerçekten iyileştirdi mi?)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Fine-tuning \emph{davranışı} öğretir, \emph{bilgiyi} değil.
+  \item Bilgi $\to$ RAG; stil/format/ton $\to$ fine-tune. Karıştırma.
+  \item Önce prompt'u tüket; fine-tune en pahalı ve en kalıcı seçenektir.
+  \item Çıktı bir model ağırlığıdır: bilgi değişince yeniden eğitim gerekir.
+  \item En sağlam kombinasyon: RAG + hafif fine-tune.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#5 — Fine-tuning davranış içindir, bilgi için değil.}\\[4pt]
+\normalsize Modele ne \emph{bildiğini} değil, nasıl \emph{davrandığını} öğret.
+Bilgi taze tutulmak ister; onu ağırlıklara değil, retrieval'a emanet et.
+\end{principlebox}

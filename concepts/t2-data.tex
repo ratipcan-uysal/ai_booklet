@@ -1,0 +1,21 @@
+% ======================================================================
+%  TIER 2 KARTI: Veri & Gizlilik
+% ======================================================================
+
+\card{Veri \& Gizlilik}{verin nereye gidiyor, nasıl korunuyor}
+\cl{Problem} Bir AI özelliği kurarken en kritik sorular çoğu zaman teknik değil,
+\emph{veriyle} ilgilidir: ``Kullanıcı verimiz modelin eğitiminde kullanılıyor mu?
+Nerede işleniyor/saklanıyor? Sisteme beslediğimiz veri yeterince temiz mi?''
+Yanlış cevap; yasal risk + kötü sonuç demektir.
+\cl{Tanım} İki ayrı kaygı: \textbf{gizlilik/uyum} --- verinin kullanımı, saklanması
+ve coğrafyası (\term{data residency}, GDPR); ve \textbf{veri kalitesi} --- sisteme
+beslenen verinin doğruluğu/tazeliği (\en{garbage in, garbage out}).
+\cl{Model} Model bir mutfak, verin malzeme. Kötü malzemeyle iyi yemek çıkmaz ---
+ve malzemenin nereden geldiği, nereye gittiği denetlenebilir olmalıdır.
+\cl{PM soruları} Sağlayıcı verimizi eğitimde kullanıyor mu (\en{zero-retention}/opt-out var mı)?
+Veri hangi bölgede işleniyor? PII maskeleniyor mu? RAG kaynağı güncel ve doğru mu?
+\cl{Data flywheel} Production kullanımı (gerçek sorular, düzeltmeler) → yarının
+eval seti ve iyileştirme yakıtı. En değerli veri kullanımdan doğar.
+\cl{Tuzak} Veriyi sonradan düşünmek; sağlayıcı sözleşmesini okumamak; kirli veriyle
+RAG kurup ``model kötü'' demek.
+\cl{İlişkili} \term{RAG} · \term{Fine-tuning} · \term{Guardrails} (PII) · \term{Eval} (flywheel) \,{\scriptsize\color{softgray}(İlke \#18, \#22)}

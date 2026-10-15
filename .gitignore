@@ -1,0 +1,7 @@
+.DS_Store
+# görsel kontrol artıkları (pdftoppm)
+/*.png
+*.aux
+*.log
+*.toc
+*.out

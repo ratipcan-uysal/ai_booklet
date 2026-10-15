@@ -1,0 +1,32 @@
+% ======================================================================
+%  TIER 2 KARTLARI: RAG'i destekleyen kavramlar
+% ======================================================================
+
+\card{Chunking}{belgeyi anlamlı parçalara bölmek}
+\cl{Problem} Bir belgeyi tek parça embed edersen anlam ortalanır ve bulanır;
+çok küçük parçalara bölersen bağlam kaybolur.
+\cl{Tanım} \term{Chunking}, bir belgeyi retrieval için anlamlı parçalara bölme işlemi.
+\cl{Model} Bir kitabı dizine eklerken bölüm/paragraf sınırından kes --- cümlenin ortasından değil.
+\cl{Ne zaman} Her RAG hattında; chunk boyutu retrieval kalitesini sessizce belirler.
+\cl{Tuzak} Sabit karakter sayısıyla körlemesine kesmek; örtüşme (\en{overlap}) koymamak.
+\cl{İlişkili} \term{Embedding} · \term{RAG} · \term{Vector Database} \,{\scriptsize\color{softgray}(İlke \#7)}
+
+\card{Vector Database \& Similarity Search}{vektörleri saklamak ve en yakını bulmak}
+\cl{Problem} Milyonlarca embedding arasında, bir sorguya en yakın olanları
+milisaniyede bulman gerekir.
+\cl{Tanım} \term{Vector DB}, embedding'leri saklayıp benzerlik (\term{cosine})
+aramasıyla en yakın komşuları getiren depodur.
+\cl{Model} Anlam haritasında ``bu noktaya en yakın yerler neresi?'' sorusunu hızlı yanıtlayan dizin.
+\cl{Ne zaman} RAG ve anlamsal aramada; ölçek büyüdükçe yaklaşık (ANN) indeksiyle.
+\cl{Tuzak} Devasa ölçekte tam arama bekleyip yavaşlamak; yanlış benzerlik metriği seçmek.
+\cl{İlişkili} \term{Embedding} · \term{Similarity Search} · \term{RAG} \,{\scriptsize\color{softgray}(İlke \#4)}
+
+\card{Hybrid Search \& Re-ranking}{anlamsal + anahtar kelime, sonra önceleme}
+\cl{Problem} Anlamsal arama tam terimi (isim, kod) kaçırır; anahtar kelime
+araması eş anlamlıyı kaçırır. İkisi tek başına eksiktir.
+\cl{Tanım} \term{Hybrid search} ikisini birleştirir; \term{re-ranking} aday
+parçaları alaka düzeyine göre yeniden sıralar.
+\cl{Model} Önce geniş ağ at (hybrid), sonra en iyi birkaçını uzman bir gözle ele (rerank).
+\cl{Ne zaman} Retrieval isabeti kritikse; tam terim ile anlam birlikte gerektiğinde.
+\cl{Tuzak} Yalnız anlamsal (dense) aramaya güvenmek; ilk k sonucu filtresiz context'e koymak.
+\cl{İlişkili} \term{Embedding} · \term{RAG} · \term{Re-ranking} \,{\scriptsize\color{softgray}(İlke \#7)}

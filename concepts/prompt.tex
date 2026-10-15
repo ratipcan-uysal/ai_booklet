@@ -1,0 +1,226 @@
+% ======================================================================
+%  KAVRAM: Prompt & System Prompt  (Tier 1)
+% ======================================================================
+
+\concept{Interface · Arayüz}{Prompt \&\\System Prompt}{Modeli değiştiremezsin; değiştirebildiğin tek yüzey gönderdiğin metindir}
+
+% ----------------------------------------------------------------------
+\stage{1}{Problem}
+% ----------------------------------------------------------------------
+Modelin ağırlıklarına dokunamazsın. Onu yeniden yazamaz, içine \texttt{if}
+koyamazsın. Elindeki tek kontrol yüzeyi, her çağrıda gönderdiğin \emph{metindir}.
+Bu metin muğlaksa, çıktı da muğlak ve tutarsız olur.
+
+\keyline{Prompt bir sohbet değil, bir arayüzdür. Modeli ``programlamanın'' tek yolu odur — ve çoğu ekip onu gelişigüzel yazar.}
+
+İki ekip aynı modeli kullanır; biri tutarlı, ``akıllı'' cevaplar alır, diğeri
+rastgele sonuçlarla boğuşur. Fark modelde değil, \textbf{prompt mühendisliğindedir}:
+rolü, kuralları ve formatı nereye, nasıl koydukların.
+
+% ----------------------------------------------------------------------
+\stage{2}{Neden Var}
+% ----------------------------------------------------------------------
+LLM durumsuzdur (\en{stateless}): çağrılar arası hiçbir şey hatırlamaz. Her
+çağrıda dünyayı sıfırdan, yalnızca o an gönderdiğin metinden kurar. Dolayısıyla:
+
+\begin{itemize}
+  \item \textbf{Kalıcı} olması gereken her şey (rol, kurallar, ton, format) her çağrıda yeniden söylenmelidir → \term{system prompt}.
+  \item \textbf{O ana özel} istek ayrı tutulmalıdır → \term{user prompt}.
+\end{itemize}
+
+Bu ayrım, modele ``kim olduğunu'' ve ``şu an ne istendiğini'' karıştırmadan
+söylemeni sağlar.
+
+% ----------------------------------------------------------------------
+\stage{3}{Tarihçe}
+% ----------------------------------------------------------------------
+\begin{timeline}
+\yr{2020} completion: ``metni devam ettir'', rol yok \tlsep \yr{2022} instruction tuning: prompt bir komuta dönüşür \tlsep \yr{2023} chat format: \texttt{system/user/assistant} ayrışır \tlsep \yr{2024–26} yapılandırılmış prompt: rol · örnek · şema · araç tanımı tek arayüzde
+\end{timeline}
+
+% ----------------------------------------------------------------------
+\stage{4}{Tanım}
+% ----------------------------------------------------------------------
+\begin{problembox}
+\textbf{Prompt:} Modele bir çağrıda gönderilen \emph{tüm} girdi.
+
+\smallskip
+\textbf{System Prompt:} Rolü, kuralları, tonu ve çıktı formatını tanımlayan,
+yüksek öncelikli ve çağrılar boyunca \emph{sabit} kalan talimat katmanı.
+
+\smallskip
+\textbf{User Prompt:} O turun özel isteği/sorusu.
+\end{problembox}
+
+Modelin gördüğü nihai prompt çoğu zaman bu ikisinin \emph{artı} araya eklenen
+bağlamın (geçmiş + getirilen bilgi) birleşimidir.
+
+% ----------------------------------------------------------------------
+\stage{5}{Zihinsel Model}
+% ----------------------------------------------------------------------
+\begin{mentalbox}
+System prompt, yeni bir çalışana ilk gün verdiğin \textbf{görev tanımı + ev
+kuralları}dır: ``Sen bir hukuk asistanısın, asla tavsiye verme, cevapları madde
+madde yaz.'' User prompt ise \textbf{bugünkü somut iş}: ``Şu sözleşmeyi özetle.''
+
+\smallskip
+Kritik fark: bu çalışanın \emph{hafızası yok}. Her sabah işe geldiğinde görev
+tanımını sıfırdan okur. O yüzden kuralları her çağrıda yeniden vermen gerekir ---
+söylemezsen, bilmez.
+\end{mentalbox}
+
+% ----------------------------------------------------------------------
+\stage{6}{Mimari Diyagram}
+% ----------------------------------------------------------------------
+Bir prompt'un anatomisi: katmanlar birleşip modele tek girdi olur. Her çağrıda
+baştan okunur.
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize,
+   layer/.style={rounded corners=2pt, minimum width=58mm, minimum height=11mm,
+                 align=left, inner sep=5pt, text width=52mm},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.9pt}]
+
+  \node[layer, fill=accentdk, text=white, draw=accentdk, line width=0.9pt]
+       (sys) {\textbf{System Prompt}\\[1pt]\footnotesize rol · kurallar · ton · format \,(sabit)};
+  \node[layer, fill=wash, draw=accent, line width=0.8pt, below=2mm of sys]
+       (ctx) {\textbf{Context}\\[1pt]\footnotesize geçmiş + getirilen bilgi \,(dinamik)};
+  \node[layer, fill=white, draw=softgray, line width=0.8pt, below=2mm of ctx]
+       (usr) {\textbf{User Prompt}\\[1pt]\footnotesize bu turun isteği};
+
+  \node[draw=hairline, line width=1pt, rounded corners=3pt,
+        fit=(sys)(ctx)(usr), inner sep=4mm] (box) {};
+  \node[anchor=south west, font=\sffamily\tiny\bfseries, text=softgray]
+        at (box.north west) {NİHAİ PROMPT \,(tek girdi)};
+
+  \node[draw=accentdk, fill=accent!12, rounded corners=2pt, right=12mm of ctx,
+        minimum width=18mm, minimum height=12mm, align=center] (model) {LLM};
+  \node[draw=good, fill=good!10, rounded corners=2pt, right=8mm of model,
+        minimum width=18mm, minimum height=10mm, align=center] (out) {Çıktı};
+
+  \draw[flow] (box.east) -- (model);
+  \draw[flow] (model) -- (out);
+\end{tikzpicture}
+\end{center}
+
+\keyline{System en üstte ve en öncelikli; user en altta ve en özel. Araya giren her şey ``context engineering''in konusudur.}
+
+% ----------------------------------------------------------------------
+\stage{7}{Karar Çerçevesi}
+% ----------------------------------------------------------------------
+``Bu bilgi nereye gitmeli --- system'e mi, user'a mı, context'e mi?'' Tek soru
+karar verir: \emph{ne kadar sık değişiyor?}
+
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize, node distance=6mm,
+   q/.style={draw=accent, line width=0.8pt, fill=wash, rounded corners=2pt,
+             align=center, inner sep=5pt, minimum width=40mm},
+   leaf/.style={draw=accentdk, line width=0.8pt, rounded corners=2pt,
+                fill=accent!12, align=center, inner sep=4pt, minimum width=30mm},
+   ed/.style={-{Stealth[length=2mm]}, softgray, line width=0.7pt},
+   lab/.style={font=\sffamily\bfseries\scriptsize, text=accentdk}]
+
+  \node[q] (q) {Bu bilgi ne sıklıkla değişir?};
+  \node[leaf, below=14mm of q] (mid) {Her istekte\\\textbf{→ User Prompt}};
+  \node[leaf, left=10mm of mid] (sys) {Hiç (sabit kural/rol)\\\textbf{→ System Prompt}};
+  \node[leaf, right=10mm of mid] (ctx) {Duruma göre (getirilen)\\\textbf{→ Context}};
+
+  \draw[ed] (q.south) -- (mid.north);
+  \draw[ed] (q.south) -- (sys.north);
+  \draw[ed] (q.south) -- (ctx.north);
+\end{tikzpicture}
+\end{center}
+
+\keyline{Kural: Sabit olanı system'e koy ki her çağrıda tutarlı olsun; değişeni user/context'te tut ki esnek kalsın.}
+
+% ----------------------------------------------------------------------
+\stage{8}{Üretim Senaryosu}
+% ----------------------------------------------------------------------
+\begin{prodbox}[Üretim Senaryosu · Tutarsız Destek Botu]
+\textbf{Bağlam.} Bir destek botu bazen madde madde, bazen paragraf; bazen Türkçe,
+bazen İngilizce; bazen tavsiye veriyor (yasak olmasına rağmen). Kurallar her
+\emph{user} mesajının içine elle yazılıyor ve sık unutuluyor.
+
+\smallskip
+\textbf{Çözüm.} Tüm kalıcı kurallar (rol, dil, ``asla tıbbi tavsiye verme'',
+``en fazla 5 madde'', çıktı formatı) tek bir \textbf{system prompt}'a taşınır.
+User prompt yalnızca müşterinin sorusunu içerir. Format için yapılandırılmış
+çıktı (JSON) eklenir.
+
+\smallskip
+\textbf{Sonuç.} Tutarlılık dramatik artar; kural değişikliği artık 30 farklı yerde
+değil, tek bir versiyonlanmış system prompt'ta yapılır.
+\end{prodbox}
+
+% ----------------------------------------------------------------------
+\stage{9}{Anti-pattern}
+% ----------------------------------------------------------------------
+\begin{antibox}[Anti-pattern · ``Prompt as Business Logic'']
+Kritik iş mantığını --- fiyatlandırma kuralları, yetki kontrolleri, dallanmalar ---
+yalnızca uzun bir düzyazı prompt'un içine gömmek. Prompt kırılgandır: tek kelime
+değişikliği davranışı sessizce bozar, test edilmesi zordur, denetlenemez.
+
+\smallskip
+\textbf{Belirti:} ``Prompt'a bir cümle ekledik, alakasız bir şey bozuldu.''\\
+\textbf{Kök neden:} Deterministik olması gereken mantık, olasılıksal düzyazıya emanet edilmiş.\\
+\textbf{Düzeltme:} Sert kuralları koda/guardrail'e al; prompt'u yönlendirme için kullan. Prompt'u kod gibi \textbf{versiyonla ve test et}.
+\end{antibox}
+
+% ----------------------------------------------------------------------
+\stage{10}{Alternatifler \& Ödünleşimler}
+% ----------------------------------------------------------------------
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} &
+{\sffamily\bfseries\small Güçlü olduğu yer} &
+{\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Düz talimat (prompt)} & Hızlı, esnek, kod gerektirmez &
+Tutarlılık prompt kalitesine bağlı \\
+\addlinespace[3pt]
+\textbf{Few-shot örnek} & Format/üslubu örnekle göstermek &
+Token yer; örnekler bağlamı şişirir \\
+\addlinespace[3pt]
+\textbf{Structured output} & Format garantisi gerektiğinde &
+Esnekliği azaltır; şema bakımı \\
+\addlinespace[3pt]
+\textbf{Fine-tuning} & Sabit üslubu kalıcı gömmek &
+Pahalı; her değişiklik yeniden eğitim \\
+\bottomrule
+\end{tabularx}
+
+% ----------------------------------------------------------------------
+\stage{11}{İlişkili Kavramlar}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item \term{Context Engineering} --- prompt'a neyin, hangi sırayla gireceğini yönetir.
+  \item \term{Few-shot} --- prompt içine konan örneklerle yönlendirme.
+  \item \term{Structured Output} --- çıktı formatını şemayla garanti altına alma.
+  \item \term{Temperature} --- aynı prompt'un ne kadar çeşitli yorumlanacağı.
+  \item \term{Prompt Versioning} --- prompt'u kod gibi izleyip geri alabilme.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{12}{Özet}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item Prompt, modeli yönlendirebildiğin \textbf{tek kontrol yüzeyidir}.
+  \item Model durumsuzdur: kalıcı kurallar her çağrıda system prompt'ta yeniden verilmelidir.
+  \item Sabit olanı system'e, isteğe özel olanı user'a, dinamik bilgiyi context'e koy.
+  \item Sert iş mantığını prompt'a gömme --- onu koda/guardrail'e al.
+  \item Prompt'u kod gibi gör: versiyonla, test et, gözden geçir.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{13}{Mühendislik İlkesi}
+% ----------------------------------------------------------------------
+\begin{principlebox}
+\textbf{İlke \#2 — Prompt koddur: istikrarlı olanı system'e koy, versiyonla, test et.}\\[4pt]
+\normalsize Modeli değiştiremezsin; yalnızca ona ne söylediğini değiştirebilirsin.
+O hâlde bu yüzeye bir sohbet gibi değil, bir arayüz gibi davran.
+\end{principlebox}

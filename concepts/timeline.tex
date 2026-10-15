@@ -1,0 +1,35 @@
+% ======================================================================
+%  APPENDIX B: Timeline — AI Engineering'in Evrimi (2017–2026)
+% ======================================================================
+\clearpage
+\markboth{Timeline}{Timeline}
+\addcontentsline{toc}{chapter}{Appendix B · Timeline}
+\noindent\concepttag{Appendix B}\par
+\vspace{2pt}
+{\sffamily\bfseries\fontsize{25}{28}\selectfont Timeline\par}
+\vspace{2pt}\textcolor{accent}{\rule{34mm}{2pt}}\par
+\vspace{2pt}
+{\color{softgray}\small AI Engineering'in bir araştırma alanından bir mühendislik disiplinine evrimi.}
+\vspace{6pt}
+
+% yıl satırı
+\newcommand{\tline}[2]{%
+  \par\vspace{4pt}\noindent\hangindent=15mm\hangafter=0
+  \makebox[13mm][l]{\sffamily\bfseries\small\color{accent}#1}#2\par}
+
+\tline{2017}{\textbf{Transformer.} ``Attention Is All You Need'' --- ölçeklenebilir dil modellerinin temeli atılır.}
+\tline{2018}{\textbf{Pretraining çağı.} BERT ve GPT: önceden eğitim + transfer öğrenme yaygınlaşır.}
+\tline{2020}{\textbf{Ölçek \& RAG.} GPT-3 few-shot'ı gösterir; Lewis vd. RAG'i adlandırır; ölçek yasaları.}
+\tline{2021}{\textbf{Retrieval altyapısı.} Embedding API'leri ve vektör veritabanları olgunlaşır; LoRA.}
+\tline{2022}{\textbf{Talimat \& akıl yürütme.} InstructGPT/RLHF, ChatGPT; Chain-of-Thought; ReAct.}
+\tline{2023}{\textbf{Araçlar \& agent dalgası.} Function calling, geniş context, açık modeller; ``lost in the middle''.}
+\tline{2024}{\textbf{Standartlaşma.} MCP; reasoning modelleri; eval ve observability araçları olgunlaşır.}
+\tline{2025}{\textbf{Production agent'lar.} Agentic sistemler üretime geçer; uzun context yaygınlaşır.}
+\tline{2026}{\textbf{Disiplin.} AI Engineering olgunlaşır: eval-driven geliştirme, observability-first mimari.}
+
+\vspace{8pt}
+\begin{principlebox}
+\textbf{Örüntü:} On yılda yön net --- \emph{model merkezli}likten \emph{sistem
+merkezli}liğe. Önce daha iyi modeller; sonra onları güvenilir, ölçülebilir ve
+güvenli ürünlere çeviren \emph{mühendislik}. Bu kitap o ikinci kısmın haritasıdır.
+\end{principlebox}

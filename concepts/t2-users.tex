@@ -1,0 +1,22 @@
+% ======================================================================
+%  TIER 2 KARTLARI: Understanding Users
+% ======================================================================
+
+\card{Intent}{kullanıcının gerçekte ne istediği}
+\cl{Problem} Kullanıcının \emph{yazdığı}, \emph{istediği} şey değildir.
+``Fatura'' diyen biri onu görüntülemek mi, itiraz etmek mi, ödemek mi istiyor?
+\cl{Tanım} Intent, bir ifadenin ardındaki gerçek amaç --- yüzeydeki kelimeler değil.
+\cl{Model} İyi bir garson siparişi değil, müşterinin \emph{açlığını} anlamaya çalışır.
+\cl{Ne zaman} Çok amaçlı asistanlarda; doğru akışa veya araca yönlendirmeden önce.
+\cl{Tuzak} Yüzeydeki kelimelere göre dallanmak; niyeti çıkarmadan yanıtlamak.
+\cl{İlişkili} \term{Prompt} · \term{Router} \,{\scriptsize\color{softgray}(İlke \#22)}
+
+\card{Conversation \& Persona}{çok turlu durum ve modelin kimliği}
+\cl{Problem} Tek mesaj değil, turlar arası bir durum vardır --- ve modelin tutarlı
+bir kimliği olmalıdır. Aksi hâlde her turda farklı bir ``kişi'' cevap verir.
+\cl{Tanım} \term{Conversation} turlar arası durumdur; \term{Persona} modelin
+tutarlı rol, ton ve kimliğidir (system prompt'ta tanımlanır).
+\cl{Model} İyi bir telefon operatörü: her çağrıda aynı kişilik, ama bağlamı hatırlar.
+\cl{Ne zaman} Çok turlu ürünlerde; marka tonu ve tutarlılık önemliyse.
+\cl{Tuzak} Her turda farklı kişilik; ya da tüm geçmişi context'e yığıp tutarlılığı bozmak.
+\cl{İlişkili} \term{System Prompt} · \term{Memory} · \term{Context Engineering} \,{\scriptsize\color{softgray}(İlke \#2)}

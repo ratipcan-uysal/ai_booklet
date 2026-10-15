@@ -1,0 +1,153 @@
+% ======================================================================
+%  APPENDIX A: Glossary (~85 kavram)
+% ======================================================================
+\clearpage
+\markboth{Glossary}{Glossary}
+\addcontentsline{toc}{chapter}{Appendix A · Glossary}
+\noindent\concepttag{Appendix A}\par
+\vspace{2pt}
+{\sffamily\bfseries\fontsize{25}{28}\selectfont Glossary\par}
+\vspace{2pt}\textcolor{accent}{\rule{34mm}{2pt}}\par
+\vspace{4pt}
+{\color{softgray}\small Kitap boyunca geçen destekleyici kavramların hızlı referansı.}
+
+% grup başlığı
+\newcommand{\glsgrp}[1]{\vspace{7pt}\par\noindent
+  {\sffamily\bfseries\footnotesize\color{accentdk}\MakeUppercase{#1}}\par
+  \vspace{-2pt}\textcolor{hairline}{\rule{\linewidth}{0.6pt}}\vspace{1pt}}
+
+\glsgrp{Model \& Üretim Temelleri}
+\begin{glosslist}
+\gloss{Token}{Modelin metni işlediği en küçük birim; maliyet ve context burada ölçülür.}
+\gloss{Tokenizer}{Metni token'lara bölen bileşen.}
+\gloss{Context Window}{Modelin tek çağrıda işleyebileceği toplam token sınırı.}
+\gloss{Temperature}{Örneklemedeki çeşitliliği ayarlayan parametre; 0 daha belirleyici.}
+\gloss{Top-p}{Olasılık kütlesinin bir eşiğine kadarki token'lardan örnekleme (nucleus).}
+\gloss{Top-k}{En olası k token arasından örnekleme.}
+\gloss{Sampling}{Bir sonraki token'ı olasılık dağılımından seçme işlemi.}
+\gloss{Logprobs}{Token'lara atanan log-olasılıklar; güven analizi için.}
+\gloss{Stop Sequence}{Üretimi durduran işaret dizisi.}
+\gloss{Hallucination}{Modelin dayanağı olmadan, emin bir tonla yanlış bilgi üretmesi.}
+\gloss{Grounding}{Cevabı doğrulanabilir bir kaynağa bağlama; halüsinasyonun panzehiri.}
+\gloss{Inference}{Eğitilmiş modelin çalıştırılıp çıktı üretmesi.}
+\gloss{Latency}{Bir isteğin yanıt süresi.}
+\gloss{Throughput}{Birim zamanda işlenen istek/token sayısı.}
+\gloss{Streaming}{Çıktıyı token token, beklemeden akıtma.}
+\gloss{Quantization}{Model ağırlıklarını daha az bit'le temsil ederek küçültme/hızlandırma.}
+\gloss{Distillation}{Büyük bir modelin davranışını küçük bir modele öğretme.}
+\gloss{Foundation Model}{Geniş veriyle önceden eğitilmiş, genel amaçlı temel model.}
+\gloss{Frontier Model}{En güçlü, en yeni nesil modeller (genelde kapalı/API).}
+\gloss{Open / Closed Model}{Açık: ağırlıkları indirilip self-host edilebilen; Kapalı: yalnız API üzerinden erişilen model.}
+\gloss{Build vs Buy}{Bir AI yeteneğini kendin mi kuracağın (self-host, özel altyapı) yoksa hazır platform/API mi kullanacağın kararı; kontrol, maliyet eğrisi ve vendor lock-in dengesi.}
+\gloss{Multimodal}{Metnin yanında görüntü, ses veya belge gibi modaliteleri de işleyen model.}
+\gloss{Reasoning Model}{Cevaptan önce yerleşik bir ``düşünme'' adımı üreten model.}
+\gloss{Prompt / Context Caching}{Tekrar eden girdi bölümünü önbelleğe alıp maliyeti ve gecikmeyi düşürme.}
+\end{glosslist}
+
+\glsgrp{Prompt \& Context}
+\begin{glosslist}
+\gloss{System Prompt}{Rol, kural ve formatı tanımlayan kalıcı talimat katmanı.}
+\gloss{Few-shot}{Prompt'a konan örneklerle yönlendirme.}
+\gloss{Zero-shot}{Örneksiz, yalnız talimatla yönlendirme.}
+\gloss{In-context Learning}{Modelin prompt'taki örneklerden o an ``öğrenmesi''.}
+\gloss{Prompt Template}{Değişken yuvalı, yeniden kullanılabilir prompt iskeleti.}
+\gloss{Structured Output}{Çıktının bir şemaya (ör. JSON) uyacak biçimde kısıtlanması.}
+\gloss{JSON Mode}{Modelin geçerli JSON üretmeye zorlanması.}
+\gloss{Prompt Chaining}{Bir prompt'un çıktısını bir sonrakine besleme.}
+\gloss{Lost in the Middle}{Uzun bağlamın ortasındaki bilginin model tarafından ihmal edilmesi.}
+\gloss{Compression}{Bağlamı özet/budama ile küçültme.}
+\gloss{Summarization}{Uzun metni veya geçmişi sıkıştırma.}
+\end{glosslist}
+
+\glsgrp{Bilgi \& Retrieval}
+\begin{glosslist}
+\gloss{Embedding}{Metni anlam-koruyan bir sayı vektörüne çeviren temsil.}
+\gloss{Vector}{Anlamı temsil eden sayı dizisi.}
+\gloss{Cosine Similarity}{İki vektörün yön benzerliği ölçüsü.}
+\gloss{Chunk}{Belgenin retrieval için bölünmüş parçası.}
+\gloss{Chunk Overlap}{Komşu chunk'ların paylaştığı örtüşen bölge.}
+\gloss{Vector Database}{Embedding saklayıp benzerlik araması yapan depo.}
+\gloss{ANN}{Yaklaşık ama hızlı en yakın komşu araması (Approximate Nearest Neighbor).}
+\gloss{Similarity Search}{Bir sorguya en yakın vektörleri bulma.}
+\gloss{Recall@k}{İlk k sonuç içinde doğru parçanın yakalanma oranı.}
+\gloss{BM25}{Klasik anahtar kelime (lexical) skorlama yöntemi.}
+\gloss{Dense / Sparse Retrieval}{Anlamsal (dense) ve anahtar kelime (sparse) getirme.}
+\gloss{Hybrid Search}{Sparse ve dense getirmenin birleşimi.}
+\gloss{Re-ranking}{Aday parçaları alaka düzeyine göre yeniden sıralama.}
+\gloss{Cross-encoder}{Sorgu + belgeyi birlikte puanlayan, isabetli ama yavaş model (rerank).}
+\gloss{Bi-encoder}{Sorgu ve belgeyi ayrı embed eden, hızlı model.}
+\gloss{Knowledge Graph}{Varlık ve ilişkileri düğüm-kenar olarak tutan yapı.}
+\gloss{Citation}{Cevabın dayandığı kaynağın gösterilmesi.}
+\end{glosslist}
+
+\glsgrp{Eylem \& Orkestrasyon}
+\begin{glosslist}
+\gloss{Function Calling}{Modelin yapılandırılmış araç çağrısı üretmesi.}
+\gloss{Function Schema}{Bir aracın ad ve parametre sözleşmesi.}
+\gloss{Skill (Agent Skills)}{Agent'ın ihtiyaç anında yüklediği, paketlenmiş yeniden kullanılabilir yetkinlik (talimat + script + kaynak).}
+\gloss{Progressive Disclosure}{İlgili bilgiyi/yetkinliği yalnızca gerektiğinde context'e yükleme ilkesi.}
+\gloss{ReAct}{Düşün → eyle → gözlemle döngüsü deseni.}
+\gloss{Agent Loop}{Agent'ın hedefe ulaşana dek tekrarlayan karar döngüsü.}
+\gloss{Scratchpad}{Modelin ara düşüncelerini yazdığı çalışma alanı.}
+\gloss{A2A}{Agent'lar arası iletişim protokolü (Agent-to-Agent).}
+\gloss{Idempotency}{Aynı isteğin tekrarının ek bir etki yaratmaması.}
+\gloss{Rate Limit}{Birim zamanda izin verilen istek sınırı.}
+\gloss{Backoff}{Hata sonrası artan beklemeyle yeniden deneme.}
+\gloss{Circuit Breaker}{Arızalı bir bağımlılığa çağrıyı geçici olarak kesme.}
+\gloss{Fallback Model}{Birincil model başarısız olursa devreye giren yedek.}
+\end{glosslist}
+
+\glsgrp{Bellek \& Akıl Yürütme}
+\begin{glosslist}
+\gloss{Working Memory}{Anlık context'teki geçici bellek.}
+\gloss{Long-term Memory}{Oturumlar arası kalıcı bellek.}
+\gloss{Episodic Memory}{Geçmiş olay/etkileşim belleği.}
+\gloss{Semantic Memory}{Kalıcı gerçek/tercih belleği.}
+\gloss{Memory Store}{Anıların saklandığı (genelde vektör tabanlı) depo.}
+\gloss{Chain of Thought}{Adım adım akıl yürütme.}
+\gloss{Reflection}{Modelin kendi çıktısını eleştirip düzeltmesi.}
+\gloss{Planning}{Eyleme geçmeden önce alt-adımlara bölme.}
+\gloss{Forgetting}{İlgisiz veya eski anıların kasıtlı atılması.}
+\end{glosslist}
+
+\glsgrp{Eğitim \& Uyarlama}
+\begin{glosslist}
+\gloss{Fine-tuning}{Modeli kendi örneklerinle yeniden eğiterek davranışını ayarlama.}
+\gloss{LoRA}{Düşük-rank adaptasyonla ucuz fine-tune.}
+\gloss{PEFT}{Parametre-verimli fine-tuning ailesi.}
+\gloss{Adapter}{Modele eklenen küçük, eğitilebilir katman.}
+\gloss{RLHF}{İnsan geri bildirimiyle pekiştirmeli hizalama.}
+\gloss{DPO}{Tercih verisiyle doğrudan hizalama yöntemi.}
+\gloss{Alignment}{Modeli istenen değer ve davranışa yöneltme.}
+\end{glosslist}
+
+\glsgrp{Eval \& Production}
+\begin{glosslist}
+\gloss{Eval Set}{Değerlendirme için kullanılan örnek kümesi.}
+\gloss{Golden Dataset}{Doğrulanmış, temsili referans test kümesi.}
+\gloss{Judge Model}{Çıktıları otomatik puanlayan LLM.}
+\gloss{Rubric}{Judge'ın uyguladığı puanlama kriterleri.}
+\gloss{Pairwise Comparison}{İki çıktıyı karşılaştırarak puanlama.}
+\gloss{Regression}{Eskiden geçen bir vakanın bozulması.}
+\gloss{Continuous Evaluation}{Her değişikliğin otomatik ölçülmesi.}
+\gloss{Canary}{Bir değişikliği küçük trafikte deneme.}
+\gloss{Shadow Testing}{Canlıya paralel, görünmez çalıştırma.}
+\gloss{Drift}{Veri veya davranışın zamanla kayması.}
+\gloss{Tracing}{Bir isteğin tüm adım dizisini kaydetme.}
+\gloss{Span}{Trace içindeki tek bir adım.}
+\gloss{Telemetry}{Gecikme, maliyet, token gibi ölçümler.}
+\gloss{Cost Tracking}{Çağrı başına maliyetin izlenmesi.}
+\gloss{Prompt Versioning}{Prompt'ların sürümlenip geri alınabilmesi.}
+\end{glosslist}
+
+\glsgrp{Güvenlik}
+\begin{glosslist}
+\gloss{Prompt Injection}{Girdiyle modelin talimatlarını ele geçirme saldırısı.}
+\gloss{Jailbreak}{Modelin güvenlik kısıtlarını atlatma girişimi.}
+\gloss{PII}{Kişisel tanımlanabilir bilgi (Personally Identifiable Information).}
+\gloss{Moderation}{Zararlı içeriğin süzülmesi.}
+\gloss{Sandboxing}{Eylemleri izole, sınırlı bir ortamda çalıştırma.}
+\gloss{Guardrail Policy}{Girdi/çıktı için uygulanan kural seti.}
+\gloss{Red-teaming}{Sistemi kırmaya çalışarak yapılan güvenlik testi.}
+\gloss{Data Residency}{Verinin hangi coğrafya/yargı alanında işlendiği ve saklandığı kuralı.}
+\end{glosslist}

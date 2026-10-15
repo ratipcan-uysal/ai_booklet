@@ -1,0 +1,18 @@
+% ======================================================================
+%  TIER 2 KARTI: Maliyet & Gecikme
+% ======================================================================
+
+\card{Maliyet \& Gecikme}{neyin pahalı ve yavaş yaptığı}
+\cl{Problem} ``AI pahalı'' ve ``AI yavaş'' en sık iki şikâyettir --- ama neyin
+sürüklediği görünmezse yanlış yeri optimize edersin.
+\cl{Tanım} Maliyet çoğunlukla \textbf{token sayısıyla} (girdi + çıktı) ve model
+boyutuyla ölçeklenir; gecikme ise \textbf{context boyutu}, model boyutu ve
+\textbf{adım sayısıyla}. İkisinin de baskın sürükleyicisi genelde context'tir.
+\cl{Model} Taksimetre gibi: her token sayaçtır. Uzun context + büyük model + çok
+adım = uzun ve pahalı yolculuk.
+\cl{Kaldıraçlar} Context'i küçült (en büyük kaldıraç) · gerekiyorsa daha küçük
+model · tekrar eden girdiyi \term{prompt caching} ile önbelleğe al · streaming ile
+algılanan gecikmeyi düşür · gereksiz reasoning/agent döngüsünü kes.
+\cl{Tuzak} Önce büyük modele koşmak; maliyeti hiç ölçmeden (cost tracking yok)
+optimize etmeye çalışmak.
+\cl{İlişkili} \term{Context Engineering} · \term{Observability} · \term{Hangi Modeli Seçmeli?} · \term{Reasoning} \,{\scriptsize\color{softgray}(İlke \#3, \#20)}

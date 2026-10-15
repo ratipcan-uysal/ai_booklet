@@ -1,0 +1,310 @@
+% ======================================================================
+%  aibook.sty — "AI Engineering: Concepts That Matter" tasarım sistemi
+%  Motor: XeLaTeX (tectonic). Dil: Türkçe. Tipografi: TeX Gyre.
+% ======================================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{aibook}[2026/06/28 AI Engineering kitap stili]
+
+% ----------------------------------------------------------------------
+%  Temel paketler
+% ----------------------------------------------------------------------
+\RequirePackage{fontspec}
+\RequirePackage{polyglossia}
+\RequirePackage{xcolor}
+\RequirePackage{geometry}
+\RequirePackage{tikz}
+\RequirePackage[most]{tcolorbox}
+\RequirePackage{enumitem}
+\RequirePackage{array}
+\RequirePackage{booktabs}
+\RequirePackage{colortbl}
+\RequirePackage{tabularx}
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\RequirePackage{microtype}
+\RequirePackage{pifont}
+\RequirePackage{multicol}
+
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,fit,backgrounds}
+
+% ----------------------------------------------------------------------
+%  Dil
+% ----------------------------------------------------------------------
+\setdefaultlanguage{turkish}
+\setotherlanguage{english}
+
+% ----------------------------------------------------------------------
+%  Renk paleti — minimal: beyaz zemin, mürekkep siyahı, mavi vurgu
+% ----------------------------------------------------------------------
+\definecolor{ink}{HTML}{16181D}      % gövde metni (saf siyah değil)
+\definecolor{accent}{HTML}{1A56DB}   % mavi vurgu
+\definecolor{accentdk}{HTML}{0F3A9C} % koyu mavi
+\definecolor{softgray}{HTML}{6B7280} % ikincil metin
+\definecolor{hairline}{HTML}{D9DEE7} % ince çizgiler
+\definecolor{wash}{HTML}{F4F6FB}     % çok açık mavi zemin (kutular)
+\definecolor{warmwash}{HTML}{FBF3F1} % anti-pattern zemini
+\definecolor{warn}{HTML}{C2410C}     % anti-pattern vurgusu
+\definecolor{good}{HTML}{0E7C5B}     % olumlu vurgu
+
+% ----------------------------------------------------------------------
+%  Fontlar — TeX Gyre (TeX Live ile gelir, Türkçe tam destek)
+% ----------------------------------------------------------------------
+\setmainfont{texgyrepagella}[
+  Extension    = .otf,
+  UprightFont  = *-regular,
+  BoldFont     = *-bold,
+  ItalicFont   = *-italic,
+  BoldItalicFont = *-bolditalic,
+  Numbers      = OldStyle ]
+\setsansfont{texgyreheros}[
+  Extension    = .otf,
+  UprightFont  = *-regular,
+  BoldFont     = *-bold,
+  ItalicFont   = *-italic,
+  BoldItalicFont = *-bolditalic,
+  Scale        = 0.92 ]
+\setmonofont{texgyrecursor}[
+  Extension    = .otf,
+  UprightFont  = *-regular,
+  BoldFont     = *-bold,
+  Scale        = 0.86 ]
+
+% İngilizce terimleri italik-yumuşatma için yardımcı
+\newcommand{\term}[1]{\textsc{#1}}            % kavram adı (small caps)
+\newcommand{\en}[1]{\textit{#1}}              % İngilizce terim
+
+% ----------------------------------------------------------------------
+%  Sayfa geometrisi — baskı kalitesi, geniş dış kenar (not için)
+% ----------------------------------------------------------------------
+\geometry{
+  paperwidth=170mm, paperheight=240mm,   % B5'e yakın kitap boyu
+  top=18mm, bottom=18mm, inner=19mm, outer=17mm,
+  headsep=6mm, footskip=10mm }
+
+\color{ink}
+\linespread{1.02}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3.5pt}
+% Sayfalar doğal yükseklikte bitsin; kısa sayfalarda esnek boşluk GERİLMESİN
+\raggedbottom
+
+% ----------------------------------------------------------------------
+%  Üst/alt bilgi
+% ----------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyfoot[C]{\sffamily\footnotesize\color{softgray}\thepage}
+\fancyfoot[R]{\sffamily\footnotesize\color{accentdk}Ratipcan Uysal}
+\fancyhead[R]{\sffamily\scriptsize\color{hairline}\MakeUppercase{\rightmark}}
+
+% ----------------------------------------------------------------------
+%  Kavram (bölüm) başlığı —  numara + isim + tek satır vaat
+% ----------------------------------------------------------------------
+\newcommand{\concepttag}[1]{%
+  {\sffamily\scriptsize\bfseries\color{accent}\MakeUppercase{#1}}}
+
+\newcommand{\concept}[3]{% #1 kategori  #2 başlık  #3 alt-vaat
+  \clearpage
+  % başlıktaki \\ (satır kırma) TOC ve header'a sızmasın: boşluğa çevir
+  \begingroup\renewcommand{\\}{\space}\protected@xdef\conlabel{#2}\endgroup
+  \addcontentsline{toc}{chapter}{\conlabel}%
+  \markboth{\conlabel}{\conlabel}%
+  \noindent\concepttag{#1}\par
+  \vspace{1pt}
+  {\sffamily\bfseries\fontsize{25}{28}\selectfont\color{ink}#2\par}
+  \vspace{2pt}
+  {\color{softgray}\itshape #3\par}
+  \vspace{1pt}
+  \textcolor{accent}{\rule{34mm}{2pt}}\par
+  \vspace{5pt}}
+
+% ----------------------------------------------------------------------
+%  Aşama başlığı — KOMPAKT: numara + isim tek satır (run-in)
+% ----------------------------------------------------------------------
+\newcommand{\stage}[2]{% #1 numara  #2 başlık
+  \vspace{5pt}%
+  \noindent
+  {\sffamily\bfseries\footnotesize\color{accent}#1}\,\,%
+  {\sffamily\bfseries\small\color{ink}#2}%
+  \hspace{4pt}\textcolor{hairline}{\leaders\hrule height 0.4pt\hfill}\par
+  \vspace{1pt}}
+
+% Kompakt tek satır timeline öğesi: \yr{2020} açıklama \tlsep \yr{2022} ...
+\newcommand{\yr}[1]{{\sffamily\bfseries\footnotesize\color{accent}#1}\,}
+\newcommand{\tlsep}{\,\textcolor{hairline}{\textbf{·}}\,}
+\newenvironment{timeline}{%
+  \vspace{1pt}\par\footnotesize\color{ink}\raggedright}{\par\vspace{2pt}}
+
+% ----------------------------------------------------------------------
+%  Çağrı kutuları (callouts)
+% ----------------------------------------------------------------------
+% Genel temel kutu
+\tcbset{
+  aibase/.style={
+    enhanced, breakable, boxrule=0pt, arc=2pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt,
+    fonttitle=\sffamily\bfseries\small,
+    coltitle=white }}
+
+% Problem kutusu
+\newtcolorbox{problembox}{%
+  aibase, colback=wash, colframe=accent,
+  borderline west={3pt}{0pt}{accent},
+  title={}, before skip=6pt, after skip=8pt}
+
+% Zihinsel model kutusu
+\newtcolorbox{mentalbox}[1][Zihinsel Model]{%
+  aibase, colback=wash!60, colframe=accent!70,
+  borderline west={3pt}{0pt}{accent},
+  coltitle=accent, title={#1}}
+
+% Anti-pattern kutusu
+\newtcolorbox{antibox}[1][Anti-pattern]{%
+  aibase, colback=warmwash, colframe=warn,
+  borderline west={3pt}{0pt}{warn},
+  coltitle=warn, title={#1}}
+
+% Mühendislik ilkesi — vurgulu, dolu zemin
+\newtcolorbox{principlebox}{%
+  aibase, unbreakable, colback=accentdk, colframe=accentdk, arc=3pt,
+  left=14pt, right=14pt, top=12pt, bottom=12pt,
+  fontupper=\sffamily\color{white}\large,
+  before skip=8pt, after skip=8pt}
+
+% Üretim örneği kutusu (ince çerçeve)
+\newtcolorbox{prodbox}[1][Üretim Senaryosu]{%
+  aibase, colback=white, colframe=hairline, boxrule=0.8pt,
+  coltitle=accent, title={#1},
+  attach boxed title to top left={xshift=10pt, yshift=-7pt},
+  boxed title style={colback=white, boxrule=0pt},
+  fonttitle=\sffamily\bfseries\small\color{accent}}
+
+% Artefakt kutusu (kod / şema / çıktı örnekleri — mono)
+\newtcolorbox{artifact}[1][Artefakt]{%
+  enhanced, breakable, boxrule=0.8pt, arc=2pt, colback=wash!50, colframe=hairline,
+  left=8pt, right=8pt, top=6pt, bottom=6pt,
+  fonttitle=\sffamily\bfseries\scriptsize\color{accentdk}, title={#1},
+  fontupper=\ttfamily\scriptsize, before skip=5pt, after skip=6pt}
+
+% ----------------------------------------------------------------------
+%  Listeler
+% ----------------------------------------------------------------------
+\setlist[itemize]{leftmargin=1.4em, itemsep=2pt, topsep=2pt,
+  label=\textcolor{accent}{\small\textbullet}}
+\setlist[enumerate]{leftmargin=1.6em, itemsep=2pt, topsep=2pt}
+
+% TL;DR / anahtar satır
+\newcommand{\keyline}[1]{%
+  \vspace{4pt}\noindent
+  {\sffamily\bfseries\color{accentdk}#1}\par\vspace{4pt}}
+
+% Karşılaştırma tablosu için yardımcı sütun tipleri
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcommand{\thd}[1]{{\sffamily\bfseries\small\color{white}#1}}
+
+% ----------------------------------------------------------------------
+%  PART bölücü — tam sayfa, numara + büyük başlık + vaat + sayfa tahmini
+% ----------------------------------------------------------------------
+\newcommand{\bookpart}[4]{% #1 numara(romen)  #2 BAŞLIK  #3 alt-açıklama  #4 sayfa-notu
+  \clearpage
+  \thispagestyle{empty}
+  \def\bp@num{#1}%
+  \ifx\bp@num\@empty
+    \addcontentsline{toc}{part}{#2}\def\bp@kicker{}%
+  \else
+    \addcontentsline{toc}{part}{PART #1 · #2}\def\bp@kicker{PART #1}%
+  \fi
+  \markboth{#2}{#2}%
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[accentdk] (current page.north west) rectangle
+      ([yshift=-58mm]current page.north east);
+    \node[anchor=north west, text=white, font=\sffamily\bfseries,
+          inner sep=0pt] at ([shift={(20mm,-20mm)}]current page.north west)
+      {\fontsize{13}{15}\selectfont \bp@kicker};
+    \node[anchor=north west, text=white, font=\sffamily\bfseries,
+          inner sep=0pt, text width=125mm] at
+      ([shift={(20mm,-30mm)}]current page.north west)
+      {\fontsize{26}{30}\selectfont #2};
+  \end{tikzpicture}
+  \vspace*{62mm}\par
+  {\large\color{ink} #3\par}
+  \vspace{6pt}
+  \textcolor{accent}{\rule{40mm}{2.2pt}}\par
+  \vspace{4pt}
+  {\sffamily\small\color{softgray} #4}\par
+  \clearpage}
+
+% ----------------------------------------------------------------------
+%  Kavram placeholder — yazılmamış bölümler için iskelet sayfası
+% ----------------------------------------------------------------------
+\newcommand{\tierbadge}[1]{%
+  \tikz[baseline=-0.6ex]\node[fill=accent!12, text=accentdk, rounded corners=2pt,
+    inner xsep=5pt, inner ysep=2pt, font=\sffamily\bfseries\scriptsize]{TIER #1};}
+
+\newcommand{\conceptstub}[3]{% #1 tier  #2 başlık  #3 tek-cümle vaat
+  \clearpage
+  \addcontentsline{toc}{chapter}{#2}%
+  \markboth{#2}{#2}%
+  \noindent\concepttag{Yazılacak}\quad\tierbadge{#1}\par
+  \vspace{2pt}
+  {\sffamily\bfseries\fontsize{26}{30}\selectfont\color{ink}#2\par}
+  \vspace{4pt}
+  {\large\color{softgray}\itshape #3\par}
+  \vspace{2pt}
+  \textcolor{hairline}{\rule{40mm}{2.2pt}}\par
+  \vspace{10pt}
+  \ifnum#1=1
+    {\sffamily\small\color{softgray}13-aşamalı tam şablon uygulanacak:\par}
+    \vspace{4pt}
+    {\footnotesize\color{hairline}%
+     1 Problem · 2 Neden Var · 3 Tarihçe · 4 Tanım · 5 Zihinsel Model ·
+     6 Mimari Diyagram · 7 Karar Çerçevesi · 8 Üretim Senaryosu ·
+     9 Anti-pattern · 10 Alternatifler · 11 İlişkili Kavramlar · 12 Özet ·
+     13 Mühendislik İlkesi\par}
+  \else
+    {\sffamily\small\color{softgray}Kompakt şablon uygulanacak:\par}
+    \vspace{4pt}
+    {\footnotesize\color{hairline}%
+     Problem · Tanım · Zihinsel Model · Diyagram · Ne Zaman · Anti-pattern\par}
+  \fi}
+
+% TOC'a kavram eklemek için (yazılmış \concept çağrılarından sonra)
+\newcommand{\tocconcept}[1]{\addcontentsline{toc}{chapter}{#1}}
+
+% ----------------------------------------------------------------------
+%  Tier 2 kompakt kart — akışta (clearpage yok), ~1 sayfa
+% ----------------------------------------------------------------------
+\newcommand{\card}[2]{% #1 başlık  #2 alt
+  \vspace{9pt}\par\penalty-150\noindent
+  \addcontentsline{toc}{chapter}{#1}\markboth{#1}{#1}%
+  {\tikz[baseline=-0.6ex]\node[fill=accent!12, text=accentdk, rounded corners=2pt,
+     inner xsep=4pt, inner ysep=1.5pt, font=\sffamily\bfseries\scriptsize]{T2};}\,\,%
+  {\sffamily\bfseries\large\color{ink}#1}\,\,{\color{softgray}\itshape\small #2}\par
+  \vspace{1pt}\textcolor{accent}{\rule{30mm}{1.6pt}}\par\vspace{2pt}}
+% Kart içi run-in etiket
+\newcommand{\cl}[1]{\textbf{\color{accentdk}#1.}\,}
+
+% ----------------------------------------------------------------------
+%  Glossary girdisi
+% ----------------------------------------------------------------------
+\newenvironment{glosslist}{%
+  \begin{list}{}{%
+    \setlength{\leftmargin}{0pt}\setlength{\itemsep}{5pt}%
+    \setlength{\parsep}{0pt}}}{%
+  \end{list}}
+\newcommand{\gloss}[2]{% #1 terim  #2 tanım
+  \item {\sffamily\bfseries\color{accentdk}#1} \,—\, #2\par}
+
+% ----------------------------------------------------------------------
+%  İçindekiler stili
+% ----------------------------------------------------------------------
+\RequirePackage{titletoc}
+\renewcommand{\contentsname}{\sffamily\bfseries\Large İçindekiler}
+\titlecontents{part}[0pt]{\addvspace{10pt}\sffamily\bfseries\color{accent}}
+  {}{}{}
+\titlecontents{chapter}[10pt]{\sffamily\small}
+  {}{}{\titlerule*[6pt]{.}\contentspage}
+
+\endinput

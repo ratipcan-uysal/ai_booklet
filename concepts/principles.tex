@@ -1,0 +1,49 @@
+% ======================================================================
+%  ÖZEL BÖLÜM: 25 Engineering Principles
+% ======================================================================
+
+\concept{Temel · Foundations}{Engineering\\Principles}{Bölümlerden bağımsız, yıllarca geçerli kalacak 25 ilke}
+
+Kavramlar değişir, araçlar eskir. Ama iyi AI mühendisliğinin altında yatan
+\emph{ilkeler} kalıcıdır. İlk on beşi kitabın derin kavramlarından doğar
+(her bölümün sonundaki ilke); son on tanesi tüm bölümleri kesen genel kurallardır.
+
+% Tek satırlık ilke öğesi: numara + ifade + etiket
+\newcommand{\prin}[3]{%
+  \par\vspace{3pt}\noindent\hangindent=9mm\hangafter=0
+  \makebox[7mm][l]{\sffamily\bfseries\small\color{accent}#1}%
+  \textbf{#2} \,{\scriptsize\color{softgray}— #3}\par}
+
+\newcommand{\pringroup}[1]{%
+  \vspace{8pt}\par\noindent
+  {\sffamily\bfseries\footnotesize\color{accentdk}\MakeUppercase{#1}}\par
+  \vspace{-1pt}\textcolor{hairline}{\rule{\linewidth}{0.6pt}}}
+
+\pringroup{Bölümlerden Doğan İlkeler}
+\prin{1}{AI'ı programlamazsın; ona brief verir, çıktısını kısıtlar ve dağılımını ölçersin.}{AI ≠ Traditional Software}
+\prin{2}{Prompt koddur: istikrarlı olanı system'e koy, versiyonla, test et.}{Prompt}
+\prin{3}{Context bir bütçedir; her token bir tercihtir.}{Context Engineering}
+\prin{4}{Anlamı arıyorsan, anlamı temsil eden uzayda ara.}{Embedding}
+\prin{5}{Fine-tuning davranış içindir, bilgi için değil.}{Fine-tuning}
+\prin{6}{Modelin işi karar vermek; eylemi koda yaptır.}{Tool Calling}
+\prin{7}{Retrieval bir model sorunu değil, bir bilgi mimarisi sorunudur.}{RAG}
+\prin{8}{Entegrasyonu bir kez yaz, her yerde kullan; ama sınırı sunucuda uygula.}{MCP}
+\prin{9}{Hatırlama saklamak değil, doğru anda geri getirmektir.}{Memory}
+\prin{10}{Düşünmenin bir bedeli vardır; zor problemde öde, kolayda ödeme.}{Reasoning}
+\prin{11}{Kontrol edebildiğin her şeyi workflow yap; agent'ı yalnızca mecbur kalınca kullan.}{Agent}
+\prin{12}{Adımları biliyorsan onları sen yaz; modele yalnızca dolduramadığın boşlukları bırak.}{Workflow}
+\prin{13}{Ölçemediğin kaliteyi iyileştiremezsin.}{Eval}
+\prin{14}{Göremediğin sistemi yönetemezsin.}{Observability}
+\prin{15}{Güvenliği prompt'a yazma; modelin etrafına deterministik korkuluklar kur.}{Guardrails \& Safety}
+
+\pringroup{Kesişen İlkeler}
+\prin{16}{En basit çözümle başla; karmaşıklığı yalnızca kanıtlanmış ihtiyaç eklesin.}{Sadelik}
+\prin{17}{Daha büyük model çoğu sorunun cevabı değildir; önce context, prompt ve retrieval'a bak.}{Bigger-model sendromu}
+\prin{18}{Production'daki her başarısızlık, yarının eval örneğidir.}{Geri besleme}
+\prin{19}{``Bir kez çalıştı'' kanıt değildir; tekrarla ve dağılıma bak.}{Olasılıksallık}
+\prin{20}{Maliyet ve gecikme birer özelliktir, sonradan düşünülecek detay değil.}{Maliyet/gecikme}
+\prin{21}{Modelin çıktısına körlemesine güvenme; doğrula, sınırla, izle.}{Güven sınırı}
+\prin{22}{Çoğu kalite sorunu bir girdi sorunudur: modeli değil, bağlamı düzelt.}{Önce context}
+\prin{23}{Yüksek riskli kararı modele tek başına bırakma; insanı döngüde tut.}{İnsan döngüde}
+\prin{24}{Yapı sürprizi azaltır: serbest metin yerine yapılandırılmış girdi/çıktı tercih et.}{Yapı}
+\prin{25}{Sistemini modelin bugünkü hâline değil, değişeceği gerçeğine göre tasarla.}{Modeller değişir}

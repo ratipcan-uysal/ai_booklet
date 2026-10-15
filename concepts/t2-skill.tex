@@ -1,0 +1,20 @@
+% ======================================================================
+%  TIER 2 KARTI: Skill (Agent Skills)
+% ======================================================================
+
+\card{Skill (Agent Skills)}{ihtiyaç anında yüklenen paketli yetkinlik}
+\cl{Problem} Bir agent onlarca işi yapabilmeli --- ama hepsinin talimatını,
+script'ini ve örneğini aynı anda system prompt'a veya araç listesine gömersen
+pencere şişer, tekrar kullanılamaz ve bakımı kâbusa döner.
+\cl{Tanım} \term{Skill}, bir agent'ın \emph{ihtiyaç anında} yüklediği,
+paketlenmiş ve yeniden kullanılabilir bir yetkinliktir: talimat + (gerekirse)
+script ve kaynaklar. İlgili olmayan skill context'e hiç girmez (\en{progressive disclosure}).
+\cl{Model} Uzmanın masasında her konunun el kitabı durmaz; o işe başlarken ilgili
+kitapçığı açar. Skill, ihtiyaç anında açılan o el kitabıdır.
+\cl{Ne zaman} Tekrar eden, paketlenebilir uzmanlıkta (``PDF doldur'', ``marka
+tonuyla yaz''); çok sayıda yeteneği bir agent'a, context'i şişirmeden vermek için.
+\cl{Skill vs Tool vs MCP} Tek fonksiyon → \term{Tool}; çapraz-uygulama bağlantı →
+\term{MCP}; talimat + kaynak içeren paketli yetkinlik → \textbf{Skill}.
+\cl{Tuzak} Her şeyi skill yapmak; basit tek-fonksiyonu skill'e sarmak; yüklenince
+devasa talimatla context'i şişirmek.
+\cl{İlişkili} \term{Tool Calling} · \term{MCP} · \term{Context Engineering} · \term{Agent} \,{\scriptsize\color{softgray}(İlke \#3, \#6)}

@@ -1,0 +1,32 @@
+% ======================================================================
+%  TIER 2 KARTLARI: Model katmanı (seçim & multimodal)
+% ======================================================================
+
+\card{Hangi Modeli Seçmeli?}{kalite ↔ maliyet ↔ gecikme üçgeni}
+\cl{Problem} ``En iyi model'' diye bir şey yoktur; her seçim bir ödünleşimdir.
+En büyük/akıllı model en pahalı ve en yavaştır; en küçük en ucuz ama en zayıf.
+Yanlış uç, ya bütçeyi ya kaliteyi yakar.
+\cl{Tanım} Model seçimi üç eksen arasında denge kurmaktır: \textbf{yetenek}
+(kalite), \textbf{maliyet} ve \textbf{gecikme}. Buna iki strateji ekseni eklenir:
+\term{frontier} (en güçlü, genelde kapalı/API) ↔ \term{küçük/açık} (ucuz, kontrol
+edilebilir, self-host).
+\cl{Model} Araç seçer gibi: her işe yarış arabası alınmaz. Çoğu yol için ekonomik
+bir araç yeter; yarış arabasını yalnızca gerçekten gereken viraja sakla.
+\cl{Ne zaman} Basit / yüksek hacim → \textbf{küçük model}. Karmaşık / düşük hacim /
+yüksek değer → \textbf{büyük model}. İkisi birden → \term{Router} (kolayı küçüğe,
+zoru büyüğe). Gizlilik/kontrol kritik → \textbf{açık/self-host}.
+\cl{Tuzak} Her şeye en büyük modeli koymak (Bigger Model Sendromu); ya da kaliteyi
+ölçmeden en ucuza inmek.
+\cl{İlişkili} \term{Fine-tuning} · \term{Eval} · \term{Router} · \term{Maliyet \& Gecikme} \,{\scriptsize\color{softgray}(İlke \#17)}
+
+\card{Multimodal}{metin dışı: görüntü, ses, belge}
+\cl{Problem} Gerçek dünya yalnız metin değildir --- ekran görüntüsü, fatura PDF'i,
+ses kaydı, fotoğraf. Yalnız-metin bir sistem bunları göremez.
+\cl{Tanım} \term{Multimodal} model, metnin yanında görüntü, ses veya belge gibi
+başka modaliteleri de girdi (bazen çıktı) olarak işleyebilen modeldir.
+\cl{Model} Tek duyulu değil, çok duyulu bir asistan: hem okur, hem görür, hem dinler.
+\cl{Ne zaman} Belge anlama (fatura, sözleşme), ekran/görsel analizi, ses
+transkripsiyonu + anlama; girdi doğal olarak metin değilse.
+\cl{Tuzak} Her görseli OCR ile metne çevirip multimodal'i atlamak (düzen/bağlam
+kaybı); ya da modalite gerekmeyen yere multimodal koymak (gereksiz pahalı).
+\cl{İlişkili} \term{Embedding} · \term{Tool Calling} · \term{Context Engineering} \,{\scriptsize\color{softgray}(İlke \#16)}

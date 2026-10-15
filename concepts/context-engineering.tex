@@ -1,0 +1,238 @@
+% ======================================================================
+%  KAVRAM: Context Engineering  (Tier 1)
+%  Context Window + Token + Compression burada toplanır
+% ======================================================================
+
+\concept{Context · Bağlam}{Context\\Engineering}{Doğru bilgiyi, doğru biçimde, sınırlı pencereye sığacak şekilde yerleştirmek}
+
+% ----------------------------------------------------------------------
+\stage{1}{Problem}
+% ----------------------------------------------------------------------
+Model yalnızca \emph{şu an} context penceresinde olanı bilir. Çok az koyarsan
+soruyu cevaplayamaz; çok fazla koyarsan maliyet ve gecikme artar, doğru bilgi
+gürültüde kaybolur (\en{lost in the middle}) ve model dağılır.
+
+\keyline{Çoğu ``model kötü'' şikâyeti aslında bir context sorunudur: modele yanlış şeyi, yanlış miktarda, yanlış sırada verdik.}
+
+Context penceresi büyüdükçe sorun çözülmez, yer değiştirir. ``Her şeyi koy''
+stratejisi 8K'da da, 1M token'da da aynı tuzağa düşer: alaka, hacimle ölçülmez.
+
+% ----------------------------------------------------------------------
+\stage{2}{Neden Var}
+% ----------------------------------------------------------------------
+Context penceresi, modelin bir çağrı için sahip olduğu \textbf{tüm çalışma
+belleğidir}. Model uzun süreli hafızaya, dosya sistemine, canlı veriye sahip
+değildir --- ne biliyorsa o an context'tedir. Dolayısıyla:
+
+\begin{itemize}
+  \item Pencereye \emph{ne girdiğine} karar vermek, sistemin kalitesini doğrudan belirler.
+  \item Pencere sınırlıdır ve her token maliyet/gecikme/dikkat açısından bir \emph{tercihtir}.
+  \item ``Context engineering'' bu tercihleri sistemli yapma disiplinidir --- prompt yazmaktan daha geniştir.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{3}{Tarihçe}
+% ----------------------------------------------------------------------
+\begin{timeline}
+\yr{2020–22} küçük pencereler (2–4K): bağlam kıt, dikkatle seçilir \tlsep \yr{2023} pencereler büyür (32–128K); ``her şeyi koy'' cazip \tlsep \yr{2023–24} \en{lost in the middle}: model ortayı ihmal eder \tlsep \yr{2024–26} disiplinli montaj: retrieval · özet · sıkıştırma · sıralama
+\end{timeline}
+
+% ----------------------------------------------------------------------
+\stage{4}{Tanım}
+% ----------------------------------------------------------------------
+\begin{problembox}
+\textbf{Context Engineering:} Her model çağrısı için, bir \emph{token bütçesi}
+altında, hangi bilginin --- hangi biçimde ve hangi sırada --- context penceresine
+gireceğine karar verme disiplini.
+
+\smallskip
+\textbf{Context Window:} Modelin tek çağrıda işleyebileceği toplam token sınırı.
+\textbf{Token:} Metnin model tarafından işlenen en küçük birimi; bütçe burada ölçülür.
+\end{problembox}
+
+% ----------------------------------------------------------------------
+\stage{5}{Zihinsel Model}
+% ----------------------------------------------------------------------
+\begin{mentalbox}
+Context penceresini bir \textbf{çalışma masası} gibi düşün. Yüzeyi sınırlı.
+Tüm dosya dolabını masaya boşaltmazsın --- bu işi yavaşlatır ve aradığını
+kaybettirir. Tam da bu görev için gereken birkaç belgeyi, en önemlisi elinin
+altında olacak şekilde yerleştirirsin.
+
+\smallskip
+İyi context engineering, masaya \emph{ne koyduğun} kadar \textbf{neyi dışarıda
+bıraktığınla} ilgilidir.
+\end{mentalbox}
+
+% ----------------------------------------------------------------------
+\stage{6}{Mimari Diyagram}
+% ----------------------------------------------------------------------
+Token bütçesinin dağılımı (üstte) ve modelin dikkatinin bağlam boyunca nasıl
+azaldığı (altta, ``lost in the middle'').
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize]
+  % --- Bütçe çubuğu ---
+  \def\H{7mm}
+  \fill[accentdk] (0,0) rectangle (18mm,\H);
+  \fill[accent!55] (18mm,0) rectangle (54mm,\H);
+  \fill[good!55] (54mm,0) rectangle (84mm,\H);
+  \fill[softgray!40] (84mm,0) rectangle (100mm,\H);
+  \draw[hairline, line width=0.8pt] (0,0) rectangle (118mm,\H);
+  \fill[white] (100mm,0) rectangle (118mm,\H);
+  \draw[hairline, line width=0.8pt] (100mm,0) rectangle (118mm,\H);
+
+  \node[font=\sffamily\tiny, text=white] at (9mm,\H/2) {System};
+  \node[font=\sffamily\tiny, text=white] at (36mm,\H/2) {Geçmiş + getirilen bilgi};
+  \node[font=\sffamily\tiny, text=white] at (69mm,\H/2) {User};
+  \node[font=\sffamily\tiny, text=ink] at (92mm,\H/2) {çıktı};
+  \node[font=\sffamily\tiny, text=softgray] at (109mm,\H/2) {pay};
+  \node[anchor=west, font=\sffamily\bfseries\tiny, text=softgray] at (0,\H+3mm)
+        {TOKEN BÜTÇESİ \,(sabit toplam)};
+
+  % --- Dikkat eğrisi (U) ---
+  \begin{scope}[shift={(0,-22mm)}]
+    \draw[hairline, line width=0.8pt, -{Stealth[length=1.6mm]}] (0,0) -- (118mm,0)
+      node[right, font=\sffamily\tiny, text=softgray]{};
+    \draw[hairline, line width=0.8pt, -{Stealth[length=1.6mm]}] (0,0) -- (0,14mm)
+      node[above, font=\sffamily\tiny, text=softgray]{dikkat};
+    \draw[accent, line width=1.1pt]
+      (2mm,12mm) .. controls (30mm,1mm) and (88mm,1mm) .. (116mm,12mm);
+    \node[font=\sffamily\tiny, text=ink] at (8mm,13.5mm) {baş};
+    \node[font=\sffamily\tiny, text=warn] at (59mm,-2.5mm) {orta \,(kaybolur)};
+    \node[font=\sffamily\tiny, text=ink] at (110mm,13.5mm) {son};
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\keyline{Sonuç: kritik bilgiyi bağlamın başına veya sonuna koy; ortaya gömme. Ve her token'ı hak ettiği için harca.}
+
+% ----------------------------------------------------------------------
+\stage{7}{Karar Çerçevesi}
+% ----------------------------------------------------------------------
+Bir bilgi parçası context'e girmeli mi, girmeliyse hangi biçimde? Token bütçesi
+karşısında her parça için aynı soruları sor.
+
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize, node distance=5mm and 8mm,
+   q/.style={draw=accent, line width=0.8pt, fill=wash, diamond, aspect=2.4,
+             align=center, inner sep=1pt, minimum width=30mm},
+   leaf/.style={draw=accentdk, line width=0.8pt, rounded corners=2pt,
+                fill=accent!12, align=center, inner sep=4pt, minimum width=22mm},
+   yes/.style={good, font=\sffamily\bfseries\scriptsize},
+   no/.style={warn, font=\sffamily\bfseries\scriptsize},
+   ed/.style={-{Stealth[length=2mm]}, softgray, line width=0.7pt}]
+
+  % dikey omurga: sorular aşağı iner, yapraklar sola/aşağı dallanır
+  \node[q] (q1) {Bu görev için\\gerekli mi?};
+  \node[leaf, left=14mm of q1] (drop) {\textbf{Dışarıda bırak}};
+  \node[q, below=11mm of q1] (q2) {Bütçeye sığıyor\\mu?};
+  \node[leaf, left=14mm of q2] (incl) {\textbf{Olduğu gibi koy}};
+  \node[q, below=11mm of q2] (q3) {Tamamı mı\\gerekli?};
+  \node[leaf, below left=12mm and 4mm of q3, minimum width=20mm] (sum) {\textbf{Özetle}\\sıkıştır};
+  \node[leaf, below right=12mm and 4mm of q3, minimum width=20mm] (retr) {\textbf{Retrieve}\\en iyi k};
+
+  \draw[ed] (q1) -- node[no,above,inner sep=1pt]{Hayır} (drop);
+  \draw[ed] (q1) -- node[yes,right]{Evet} (q2);
+  \draw[ed] (q2) -- node[yes,above,inner sep=1pt]{Evet} (incl);
+  \draw[ed] (q2) -- node[no,right]{Hayır} (q3);
+  \draw[ed] (q3) -- node[yes,left]{Evet} (sum);
+  \draw[ed] (q3) -- node[no,right]{Hayır} (retr);
+\end{tikzpicture}
+\end{center}
+
+\keyline{Sıra: önce alaka (gerekli mi?), sonra biçim (olduğu gibi / özet / retrieval). Hacim en son gelir.}
+
+% ----------------------------------------------------------------------
+\stage{8}{Üretim Senaryosu}
+% ----------------------------------------------------------------------
+\begin{prodbox}[Üretim Senaryosu · Uzayan Sohbet]
+\textbf{Bağlam.} Bir asistan, uzun sohbetlerde tüm geçmişi her çağrıda context'e
+ekliyor. 30. mesajdan sonra cevaplar yavaşlıyor, pahalılaşıyor ve ilk kuralları
+``unutuyor'' (çünkü kurallar bağlamın ortasında kalıyor).
+
+\smallskip
+\textbf{Çözüm.} Eski turlar tek bir \emph{rolling summary}'ye sıkıştırılır;
+yalnızca son birkaç tur ham tutulur; gerektiğinde geçmişten ilgili parçalar
+retrieve edilir. System kuralları her zaman \emph{başta} kalır.
+
+\smallskip
+\textbf{Sonuç.} Token kullanımı sabitlenir, gecikme düşer, tutarlılık geri gelir ---
+pencere büyütülmeden. Sorun hacimde değil, montajdaymış.
+\end{prodbox}
+
+% ----------------------------------------------------------------------
+\stage{9}{Anti-pattern}
+% ----------------------------------------------------------------------
+\begin{antibox}[Anti-pattern · ``Infinite Context / Her Şeyi Koy'']
+``Pencere büyük, hepsini koyalım, model halleder.'' Tüm dokümanları, tüm geçmişi,
+her ihtimali context'e doldurmak. Sonuç: dikkat seyrelir, kritik bilgi ortada
+kaybolur, maliyet ve gecikme patlar, model alakasız ayrıntılarla dağılır.
+
+\smallskip
+\textbf{Belirti:} ``Daha çok bağlam verdik ama cevaplar kötüleşti / yavaşladı.''\\
+\textbf{Kök neden:} Hacmi alakayla karıştırmak; bütçeyi tercih olarak görmemek.\\
+\textbf{Düzeltme:} Alakaya göre seç, özetle/retrieve et, kritik bilgiyi uçlara koy, kullanılmayanı çıkar.
+\end{antibox}
+
+% ----------------------------------------------------------------------
+\stage{10}{Alternatifler \& Ödünleşimler}
+% ----------------------------------------------------------------------
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Strateji} &
+{\sffamily\bfseries\small Ne zaman} &
+{\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Daha büyük pencere} & Bilgi gerçekten büyük ve hepsi gerekli &
+Pahalı, yavaş, lost-in-the-middle \\
+\addlinespace[3pt]
+\textbf{Retrieval (RAG)} & Bilgi çok büyük, sadece ilgili parça gerek &
+Retrieval altyapısı; isabet riski \\
+\addlinespace[3pt]
+\textbf{Özetleme} & Geçmiş/uzun metin sıkıştırılabilir &
+Detay kaybı; özet hatası birikir \\
+\addlinespace[3pt]
+\textbf{Sıkıştırma/budama} & Tekrar/gürültü çok &
+Yanlış budama bilgi kaybettirir \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+Gerçek sistemler bunları \emph{birlikte} kullanır: sabit system + özetlenmiş
+geçmiş + retrieve edilmiş bilgi + ham user isteği.
+
+% ----------------------------------------------------------------------
+\stage{11}{İlişkili Kavramlar}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item \term{Context Window} --- montajın sığması gereken sert sınır.
+  \item \term{Token} --- bütçenin para birimi.
+  \item \term{RAG} --- pencereye yalnızca ilgili bilgiyi getirme yöntemi.
+  \item \term{Summarization} --- geçmişi/uzun metni sıkıştırma.
+  \item \term{Prompt} --- montajın görünen yüzü; context onu besler.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{12}{Özet}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item Context penceresi modelin \textbf{tüm çalışma belleğidir}; ne koyarsan onu bilir.
+  \item Pencere büyütmek sorunu çözmez, yer değiştirir: alaka hacimle ölçülmez.
+  \item Token bir bütçedir; her token bir tercihtir.
+  \item Kritik bilgiyi uçlara koy --- ortası ``kaybolur''.
+  \item Seç → biçimlendir (özet/retrieval) → sırala. Hacim en son düşünülür.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{13}{Mühendislik İlkesi}
+% ----------------------------------------------------------------------
+\begin{principlebox}
+\textbf{İlke \#3 — Context bir bütçedir; her token bir tercihtir.}\\[4pt]
+\normalsize Modele her şeyi verme; \emph{tam da gerekeni} ver. Kaliteyi
+belirleyen, modelin ne kadar gördüğü değil, \emph{ne gördüğüdür}.
+\end{principlebox}

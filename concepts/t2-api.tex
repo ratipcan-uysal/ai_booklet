@@ -1,0 +1,15 @@
+% ======================================================================
+%  TIER 2 KARTI: API & Authorization
+% ======================================================================
+
+\card{API \& Authorization}{eylemin arabirimi ve yetki sınırı}
+\cl{Problem} Model bir eylemi tetikler, ama o eylemin teknik arabirimi ve
+\emph{kimin neye erişebileceği} koddadır --- modelde değil.
+\cl{Tanım} \term{API}, eylemin teknik arabirimidir; \term{Authorization}, o
+eylemi kimin yapabileceğinin sınırıdır.
+\cl{Model} Model resepsiyonist; API kapı, Authorization ise anahtar. Model
+müşteriye kendi anahtarını dağıtamaz.
+\cl{Ne zaman} Tool calling'in arkasında; her dış eylemde ve veri erişiminde.
+\cl{Tuzak} Yetkiyi ``kontrol et'' diye prompt'ta modele bırakmak; araçta/kodda uygulamamak ---
+prompt injection bunu aşar.
+\cl{İlişkili} \term{Tool Calling} · \term{MCP} · \term{Guardrails} \,{\scriptsize\color{softgray}(İlke \#6, \#15)}

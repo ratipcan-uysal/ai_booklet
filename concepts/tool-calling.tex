@@ -1,0 +1,148 @@
+% ======================================================================
+%  KAVRAM: Tool Calling  (Tier 1)  — kompakt
+% ======================================================================
+
+\concept{Actions · Eylem}{Tool Calling}{Modelin kendi kafasından çıkıp dış dünyada eylem yapması}
+
+\stage{1}{Problem}
+Bir LLM yalnızca metin üretebilir. Bugünün hava durumunu bilemez, veritabanını
+sorgulayamaz, e-posta gönderemez, güvenilir aritmetik yapamaz. Ne kadar zeki
+olursa olsun, kendi kafasının içinde hapistir --- ve bilmediği bir şeyi
+uydurmaya meyillidir.
+
+\keyline{Model ``bilmek''te değil, ``yapmak''ta zayıftır. Eylem için dış dünyaya bir köprü gerekir.}
+
+\stage{2}{Neden Var}
+Gerçek görevler eylem ister: veri çekmek, hesaplamak, bir kaydı güncellemek.
+Tool calling bu köprüdür: modele kullanabileceği fonksiyonların tanımını
+verirsin; model hangisini, hangi argümanlarla çağıracağına karar verip
+\emph{yapılandırılmış} bir istek üretir; senin kodun çalıştırıp sonucu modele
+geri verir.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2023} ``plugins'': model dış servis çağırır \tlsep \yr{2023} function calling: yapılandırılmış, şema tabanlı çağrı \tlsep \yr{2024} paralel + çok adımlı tool use standartlaşır \tlsep \yr{2024–26} tool calling, agent'ların temel yapı taşı olur
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Tool Calling (Function Calling):} Modele araç tanımları (ad, açıklama,
+parametre şeması) verilir; model bir aracı \emph{yapılandırılmış} biçimde çağırır
+(ör. \texttt{get\_order(id=123)}); senin kodun çalıştırır ve sonucu modele
+döndürür. Model çağrıyı \emph{üretir}, çalıştırmaz.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Model, işleri kendi eliyle yapamayan ama \textbf{kusursuz iş emri yazabilen bir
+yönetici} gibidir: ``\texttt{get\_weather(city=İstanbul)} çağır.'' Senin kodun
+ise emri uygulayıp rapor eden \textbf{ekiptir}. Model \emph{neyi} ve \emph{ne
+zaman} yapacağına karar verir; \emph{yapma} işini koda bırakır.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Tool calling bir döngüdür: model karar verir, kod çalıştırır, sonuç modele döner.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize,
+   io/.style={draw=softgray, fill=white, rounded corners=8pt, align=center,
+              minimum height=9mm, minimum width=18mm, inner sep=3pt},
+   m/.style={draw=accentdk, fill=accent!12, rounded corners=2pt, align=center,
+             minimum height=11mm, minimum width=20mm},
+   k/.style={draw=accent, fill=wash, rounded corners=2pt, align=center,
+             minimum height=11mm, minimum width=22mm},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+  \node[io] (u) {Kullanıcı};
+  \node[m, right=12mm of u] (model) {LLM\\\textcolor{softgray}{karar}};
+  \node[k, right=16mm of model] (tool) {Senin kodun\\\textcolor{softgray}{aracı çalıştır}};
+  \node[io, below=9mm of model, fill=good!10, draw=good] (ans) {Cevap};
+
+  \draw[flow] (u) -- (model);
+  \draw[flow] (model.north) .. controls +(0,6mm) and +(0,6mm) ..
+        node[above, font=\sffamily\tiny, text=accentdk]{\texttt{call(args)}} (tool.north);
+  \draw[flow] (tool.south) .. controls +(0,-6mm) and +(0,-6mm) ..
+        node[below, font=\sffamily\tiny, text=accentdk]{sonuç} (model.south east);
+  \draw[flow] (model) -- (ans);
+  \node[font=\sffamily\tiny, text=softgray, above=1mm of model] {gerekirse tekrarla};
+\end{tikzpicture}
+\end{center}
+\keyline{Model çağrıyı önerir; güvenlik ve doğrulama \emph{senin kodundadır}. Modelin çıktısı bir niyet, bir komut değildir.}
+
+\stage{7}{Karar Çerçevesi}
+Bir yeteneği nasıl vermeli --- prompt'a gömerek mi, RAG ile mi, araç olarak mı?\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{34mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small İhtiyaç} & {\sffamily\bfseries\small Doğru araç} \\
+\midrule
+Canlı / değişken veri (sipariş, hava) & \textbf{Tool calling} \\
+Kesin işlem (hesap, kayıt güncelleme) & \textbf{Tool calling} \\
+Statik bilgi yığını (dokümanlar) & RAG \\
+Sabit kural / küçük bağlam & Prompt \\
+\bottomrule
+\end{tabularx}
+\keyline{İyi araç: tek ve net işlevli, iyi açıklanmış, dar parametreli. Belirsiz/çok geniş araç, modeli yanlış seçime iter.}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Sipariş Durumu Soran Bot]
+\textbf{Bağlam.} Destek botu ``Siparişim nerede?'' sorusuna eskiden uyduruk
+tahminler veriyordu --- canlı veriye erişimi yoktu.
+
+\smallskip
+\textbf{Çözüm.} \texttt{get\_order\_status(order\_id)} aracı tanımlanır. Model
+müşteri kimliğinden sipariş no'yu çıkarır, aracı çağırır, gerçek durumu alır ve
+doğal dile çevirir.
+
+\smallskip
+\textbf{Sonuç.} Halüsinasyon yerine gerçek, güncel cevap. Yetki kontrolü araçta
+yapıldığı için müşteri yalnızca kendi siparişini görebiliyor.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``50 Araç + Muğlak Açıklama'']
+Modele onlarca, üst üste binen ve belirsiz açıklamalı araç vermek; ya da
+modelin kendi başına aritmetik/arama yapmasına güvenmek. Model yanlış aracı
+seçer, argümanları karıştırır, sessizce hata üretir.
+
+\smallskip
+\textbf{Belirti:} ``Model yanlış aracı çağırıyor veya hiç çağırmıyor.''\\
+\textbf{Kök neden:} Çok fazla / örtüşen / kötü tanımlı araç.\\
+\textbf{Düzeltme:} Araç sayısını azalt, her birini tek işe indir, açıklama ve parametre şemasını netleştir, sonucu doğrula.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{28mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} & {\sffamily\bfseries\small Güçlü} & {\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Tool calling} & Canlı veri + kesin eylem & Araç tasarımı + güvenlik yükü \\
+\addlinespace[2pt]
+\textbf{Yalnız prompt} & Basit, sabit görevler & Eylem/canlı veri yapamaz \\
+\addlinespace[2pt]
+\textbf{RAG} & Statik bilgi getirme & Eylem değil, yalnız okuma \\
+\addlinespace[2pt]
+\textbf{Sabit kod akışı} & Tam belirli iş & Esnek değil; model kararını kullanmaz \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{MCP} (araçları standartlaştırır) \tlsep \term{Agent} (araç çağrımını döngüye sokar) \tlsep
+\term{Function Schema} (parametre sözleşmesi) \tlsep \term{Structured Output} (çağrının biçimi) \tlsep
+\term{Authorization} (araç içinde yetki)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Tool calling, modeli ``bilmek''ten ``yapmak''a taşır.
+  \item Model çağrıyı \emph{üretir}; çalıştırma, doğrulama ve yetki senin kodundadır.
+  \item Canlı veri ve kesin işlem için araç; statik bilgi için RAG; sabit kural için prompt.
+  \item İyi araç: tek işlevli, net açıklamalı, dar parametreli.
+  \item Az ve net araç, çok ve muğlak araçtan iyidir.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#6 — Modelin işi karar vermek; eylemi koda yaptır.}\\[4pt]
+\normalsize Modelin çağrısı bir \emph{niyettir}, bir yetki değil. Güvenliği,
+doğrulamayı ve sınırı her zaman aracın içinde --- modelin dışında --- uygula.
+\end{principlebox}

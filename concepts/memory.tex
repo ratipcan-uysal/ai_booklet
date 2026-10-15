@@ -1,0 +1,147 @@
+% ======================================================================
+%  KAVRAM: Memory  (Tier 1)  — kompakt
+% ======================================================================
+
+\concept{Memory · Bellek}{Memory}{Modelin tutmadığı durumu sistemin hatırlaması ve doğru anda geri getirmesi}
+
+\stage{1}{Problem}
+LLM durumsuzdur: çağrılar arası her şeyi unutur. Kullanıcı ``adım Ali'' der, üç
+mesaj sonra model bunu bilmez. Tercihleri öğrenemez, yarım kalan bir işi
+sürdüremez, ikinci oturumda seni tanımaz. Her konuşma sıfırdan başlar.
+
+\keyline{Model hatırlamaz --- ve hatırlıyormuş gibi hissettiren her sistem, aslında dışarıda bir hafıza katmanı işletir.}
+
+\stage{2}{Neden Var}
+Turlar ve oturumlar boyunca tutarlı ve kişiselleştirilmiş bir deneyim için,
+sistemin ilgili bilgiyi \emph{saklaması} ve gerektiğinde \emph{geri çağırması}
+gerekir. Memory, modelin kendisinde tutmadığı durumu kalıcılaştıran ve doğru
+anda context'e enjekte eden katmandır.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2020} durumsuz completion'lar \tlsep \yr{2022} sohbet geçmişini context'e ekleme \tlsep \yr{2023} harici memory store'lar (vektör tabanlı) \tlsep \yr{2024–26} yapılandırılmış bellek türleri (episodic/semantic) + retrieval
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Memory:} Bilgiyi turlar/oturumlar boyunca saklayan ve gerektiğinde ilgili
+parçaları context'e geri enjekte eden sistem. Türleri: \textbf{Working} (anlık
+context), \textbf{Long-term} (kalıcı), \textbf{Episodic} (geçmiş olaylar/etkileşimler),
+\textbf{Semantic} (kalıcı gerçekler/tercihler).
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Model, \textbf{her seferinde defterini yeniden okuyan, hafızası olmayan çok zeki
+biri} gibidir. Memory = o \emph{defter} + şu an hangi sayfayı önüne koyacağına
+karar veren \emph{kütüphaneci}. Working memory masanın üstündekidir; long-term
+ise arşiv dolabı. Mesele ne kadar sakladığın değil, doğru sayfayı doğru anda
+masaya koyabilmen.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Memory bir oku-yaz döngüsüdür: konuşmadan yaz, sonraki turda ilgiliyi getir.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=10mm,
+   io/.style={draw=softgray, fill=white, rounded corners=8pt, align=center,
+              minimum height=9mm, minimum width=20mm, inner sep=3pt},
+   store/.style={draw=accentdk, fill=accent!12, cylinder, shape border rotate=90,
+                 aspect=0.25, minimum height=14mm, minimum width=20mm, align=center},
+   m/.style={draw=accentdk, fill=accent!12, rounded corners=2pt, align=center,
+             minimum height=10mm, minimum width=18mm},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+  \node[io] (turn) {Konuşma\\turu};
+  \node[store, right=16mm of turn] (mem) {Memory\\store};
+  \node[m, below=10mm of mem] (ctx) {Context};
+  \node[io, left=16mm of ctx, fill=good!10, draw=good] (model) {LLM};
+  \draw[flow] (turn) -- node[above, font=\sffamily\tiny, text=accentdk]{yaz} (mem);
+  \draw[flow] (mem) -- node[right, font=\sffamily\tiny, text=accentdk]{ilgiliyi getir} (ctx);
+  \draw[flow] (ctx) -- (model);
+  \draw[flow] (model.north) .. controls +(0,8mm) and +(0,8mm) ..
+        node[midway, left, font=\sffamily\tiny, text=softgray]{yeni tur} (turn.south);
+\end{tikzpicture}
+\end{center}
+\keyline{Her şeyi context'e yığmak ``memory'' değildir --- o yalnızca pencereyi şişirir. Memory, \emph{seçici} geri getirmedir.}
+
+\stage{7}{Karar Çerçevesi}
+Bir bilgi nereye, hangi bellek türüne? Süre ve tür belirler.\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{34mm} >{\raggedright\arraybackslash}p{30mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Bilgi} & {\sffamily\bfseries\small Tür} & {\sffamily\bfseries\small Nerede} \\
+\midrule
+Yalnız bu tur gerekli & Working & Context (saklama yok) \\
+\addlinespace[2pt]
+Kullanıcı tercihi / gerçek & Semantic & Long-term store \\
+\addlinespace[2pt]
+Geçmiş etkileşim / olay & Episodic & Long-term store \\
+\addlinespace[2pt]
+Uzun ama tek oturumluk & — & Özetle, sonra at \\
+\bottomrule
+\end{tabularx}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Kişisel Asistan]
+\textbf{Bağlam.} Bir asistanın her oturumda kullanıcıyı sıfırdan tanıması
+gerekiyor; ``geçen sefer söylediklerimi unuttun'' şikâyetleri geliyor. Naif
+çözüm --- tüm geçmişi context'e koymak --- birkaç oturum sonra pencereyi taşırıyor.
+
+\smallskip
+\textbf{Çözüm.} Önemli gerçekler (tercih, isim, hedef) semantic memory'ye yazılır;
+geçmiş etkileşimler episodic olarak saklanır. Yeni turda yalnızca \emph{ilgili}
+anılar retrieve edilip context'e konur.
+
+\smallskip
+\textbf{Sonuç.} Asistan kişisel ve tutarlı hissettiriyor, üstelik context sabit
+kalıyor --- çünkü hepsini değil, ilgiliyi hatırlıyor.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Memory Abuse'']
+Her şeyi saklamak ve her turda devasa miktarda anıyı context'e enjekte etmek;
+ya da hiç unutmamak --- böylece eski, alakasız, çelişen anılar cevabı kirletir.
+``Memory'' = tüm sohbet kaydını pencereye koymak sanmak.
+
+\smallskip
+\textbf{Belirti:} Context şişer, maliyet artar, model eski/çelişen bilgilerle dağılır.\\
+\textbf{Kök neden:} Saklamayı geri getirmeyle karıştırmak; unutma stratejisi olmaması.\\
+\textbf{Düzeltme:} Seçici sakla, ilgiliyi retrieve et, eskiyeni özetle veya at (\en{forgetting}).
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{32mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} & {\sffamily\bfseries\small Güçlü} & {\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Tüm geçmiş context'te} & Basit; hiçbir şey kaçmaz & Pencereyi taşırır; pahalı \\
+\addlinespace[2pt]
+\textbf{Özetlenmiş bellek} & Kompakt, ucuz & Detay kaybı; özet hatası \\
+\addlinespace[2pt]
+\textbf{Retrieval tabanlı (RAG)} & Ölçeklenir; ilgiliyi getirir & İsabet riski; altyapı \\
+\addlinespace[2pt]
+\textbf{Yapılandırılmış store} & Tercih/gerçekler net & Şema + bakım yükü \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{Context Engineering} (anıların sığacağı bütçe) \tlsep \term{RAG} (retrieval mekanizması) \tlsep
+\term{Summarization} (eskiyi sıkıştırma) \tlsep \term{Agent} (uzun görevlerde belleğe muhtaç) \tlsep
+\term{Working / Long-term Memory} (türler)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Model durumsuzdur; hatırlama bir \textbf{sistem} sorumluluğudur.
+  \item Memory = seçici saklama + doğru anda geri getirme; geçmişi yığmak değil.
+  \item Türler: working (anlık), long-term (kalıcı), episodic (olay), semantic (gerçek).
+  \item Süreye göre yerleştir; ilgiliyi retrieve et, eskiyeni özetle/at.
+  \item Her şeyi hatırlamak, hiçbir şey hatırlamamak kadar zararlıdır.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#9 — Hatırlama saklamak değil, doğru anda geri getirmektir.}\\[4pt]
+\normalsize Her şeyi tutma --- ilgili olanı geri getir. İyi bir bellek,
+unutmayı da bilen belleğdir.
+\end{principlebox}

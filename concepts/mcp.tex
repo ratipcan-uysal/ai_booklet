@@ -1,0 +1,151 @@
+% ======================================================================
+%  KAVRAM: MCP — Model Context Protocol  (Tier 1)  — kompakt
+% ======================================================================
+
+\concept{Actions · Eylem}{MCP}{Modeli araçlara bağlamanın ortak standardı: AI için USB-C}
+
+\stage{1}{Problem}
+Her araç, her uygulamaya elle bağlanıyor. 3 farklı AI uygulaman ve 10 aracın
+varsa, $3\times10$ özel entegrasyon yazıyorsun --- her biri ayrı bakım, ayrı
+hata kaynağı. Bir aracı bir yerde bağlaman, onu diğer uygulamada işe yaramaz
+kılıyor. Standart yok.
+
+\keyline{Sorun araçlarda değil, her bağlantının \emph{tekil ve tekrar kullanılamaz} olmasında. $N\times M$ entegrasyon sürdürülemez.}
+
+\stage{2}{Neden Var}
+MCP, modellerin araçlara, verilere ve hazır prompt'lara nasıl bağlanacağını
+\emph{standartlaştırır}. Bir entegrasyonu bir kez ``MCP sunucusu'' olarak yaz;
+MCP uyumlu her istemci (IDE, sohbet uygulaması, agent) onu yeniden yazmadan
+kullansın. $N\times M$ problemi $N+M$'e iner.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2023} özel function calling: her uygulama kendi entegrasyonu \tlsep \yr{2023} kapalı ``plugin'' ekosistemleri \tlsep \yr{2024} MCP: açık protokol olarak duyurulur \tlsep \yr{2024–26} sunucu ekosistemi büyür (dosya, DB, SaaS araçları)
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{MCP (Model Context Protocol):} AI uygulamalarının araçları, kaynakları
+ve prompt'ları nasıl \emph{sunup tükettiğini} standartlaştıran açık protokol.
+\textbf{Sunucu} (server) yetenekleri sunar; \textbf{istemci} (client, AI
+uygulaması) onları tüketir --- ortak bir dille.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+\textbf{USB-C} gibi düşün. Eskiden her cihazın kendi kablosu vardı --- telefon,
+kamera, yazıcı; hepsi farklı. USB-C tek standart bağlantı noktası getirdi. MCP,
+AI uygulamaları ile ihtiyaç duydukları araç/veri arasındaki o \emph{standart
+porttur}: bir kez tak, her yerde çalışsın.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Tek protokol, çok istemci ile çok sunucuyu birbirine bağlar.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=4mm,
+   cl/.style={draw=accentdk, fill=accent!12, rounded corners=2pt, align=center,
+              minimum height=8mm, minimum width=24mm},
+   sv/.style={draw=accent, fill=wash, rounded corners=2pt, align=center,
+              minimum height=8mm, minimum width=24mm},
+   bus/.style={draw=accentdk, fill=accentdk, text=white, rounded corners=2pt,
+               align=center, minimum height=8mm, minimum width=70mm},
+   flow/.style={-{Stealth[length=1.8mm]}, accent, line width=0.7pt}]
+  % istemciler
+  \node[cl] (c1) {IDE};
+  \node[cl, right=5mm of c1] (c2) {Sohbet uygulaması};
+  \node[cl, right=5mm of c2] (c3) {Agent};
+  % protokol barı
+  \node[bus, below=7mm of c2] (bus) {MCP \,(ortak protokol)};
+  % sunucular
+  \node[sv, below=7mm of bus.south west, anchor=north west] (s1) {Dosya sistemi};
+  \node[sv, right=5mm of s1] (s2) {Veritabanı};
+  \node[sv, right=5mm of s2] (s3) {SaaS araçları};
+
+  \foreach \c in {c1,c2,c3} \draw[flow] (\c) -- (bus);
+  \foreach \s in {s1,s2,s3} \draw[flow] (bus) -- (\s);
+  \node[font=\sffamily\tiny, text=softgray, left=1mm of c1] {istemciler};
+  \node[font=\sffamily\tiny, text=softgray, left=1mm of s1] {sunucular};
+\end{tikzpicture}
+\end{center}
+\keyline{Her istemci her sunucuyla otomatik konuşur: $N\times M$ özel entegrasyon yerine $N+M$ standart bağlantı.}
+
+\stage{7}{Karar Çerçevesi}
+MCP mi, doğrudan function calling mi? Tekrar kullanım ve ölçek belirleyici.\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{40mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Durum} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Araç birçok uygulamada kullanılacak & \textbf{MCP sunucusu} \\
+Çok sayıda entegrasyon / ekosistem & \textbf{MCP} \\
+Tek uygulamada tek, basit araç & Doğrudan function calling \\
+Hızlı prototip / tek seferlik & Doğrudan function calling \\
+\bottomrule
+\end{tabularx}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Paylaşılan İç Sistemler]
+\textbf{Bağlam.} Bir şirkette CRM, dosya deposu ve analitik veritabanı var. Üç
+farklı AI uygulaması (IDE asistanı, destek botu, iç agent) hepsine erişmek
+istiyor --- ama her biri ayrı ayrı entegre ediliyor, bakım kabusu.
+
+\smallskip
+\textbf{Çözüm.} Her iç sistem bir kez \textbf{MCP sunucusu} olarak sunulur.
+Üç uygulama da MCP istemcisi olarak aynı sunucuları yeniden entegrasyon olmadan
+kullanır.
+
+\smallskip
+\textbf{Sonuç.} Yeni bir AI uygulaması eklemek ``sıfırdan entegrasyon'' değil,
+``mevcut sunuculara bağlan'' demek. Bakım ve güvenlik tek noktada toplanır.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Her Şeye MCP / Açık Sunucu'']
+Tek, basit bir aracı koca bir MCP sunucusuna dönüştürerek gereksiz karmaşa
+yaratmak; ya da daha tehlikelisi, MCP sunucusunu yetkilendirme ve sandboxing
+olmadan açmak --- böylece modele dosya sistemine veya veritabanına sınırsız
+erişim vermek.
+
+\smallskip
+\textbf{Belirti:} Basit iş için aşırı altyapı; veya bir sunucu üzerinden geniş, kontrolsüz erişim.\\
+\textbf{Kök neden:} Standardı amaç sanmak; güvenliği protokolden beklemek.\\
+\textbf{Düzeltme:} MCP'yi tekrar kullanım varken kullan. Yetki ve sınırı her zaman \emph{sunucunun içinde} uygula, sandbox'la.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} & {\sffamily\bfseries\small Güçlü} & {\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{MCP} & Tekrar kullanım, ekosistem, standart & Kurulum yükü; olgunlaşan protokol \\
+\addlinespace[2pt]
+\textbf{Doğrudan function calling} & Basit, hızlı, tek uygulama & Her entegrasyon tekrar yazılır \\
+\addlinespace[2pt]
+\textbf{Özel plugin sistemi} & Tam kontrol & Kapalı; taşınmaz \\
+\addlinespace[2pt]
+\textbf{Düz API entegrasyonu} & Her yerde çalışır & Model-farkında değil; tutkal kod \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{Tool Calling} (MCP'nin standartlaştırdığı şey) \tlsep \term{A2A} (agent'lar arası protokol) \tlsep
+\term{API} (alttaki arabirim) \tlsep \term{Agent} (MCP sunucularını tüketen) \tlsep
+\term{Authorization} (sunucu içinde yetki)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item MCP, model--araç bağlantısını standartlaştırır: AI için USB-C.
+  \item $N\times M$ özel entegrasyonu $N+M$ standart bağlantıya indirir.
+  \item Sunucu yetenek sunar, istemci tüketir --- ortak dille.
+  \item Tekrar kullanım/ölçek varsa MCP; tek seferlik basit araçta doğrudan function calling.
+  \item Güvenlik protokolden gelmez: yetki ve sandbox sunucunun içindedir.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#8 — Entegrasyonu bir kez yaz, her yerde kullan; ama sınırı sunucuda uygula.}\\[4pt]
+\normalsize Standart, tekrarı ortadan kaldırır --- güvenliği değil. Her MCP
+sunucusu kendi yetki ve sandbox sınırını taşımalıdır.
+\end{principlebox}

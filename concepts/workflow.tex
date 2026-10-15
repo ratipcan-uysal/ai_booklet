@@ -1,0 +1,149 @@
+% ======================================================================
+%  KAVRAM: Workflow  (Tier 1)  — kompakt
+% ======================================================================
+
+\concept{Orchestration · Orkestrasyon}{Workflow}{Adımları modelin değil senin tanımladığın, kontrollü orkestrasyon}
+
+\stage{1}{Problem}
+Çok adımlı ama \emph{adımları belli} bir AI görevin var --- yine de onu otonom
+bir agent olarak kurdun. Şimdi maliyet öngörülemez, hata ayıklama zor, bazen
+döngüde sıkışıyor. Oysa ihtiyacın esneklik değil, \textbf{güvenilirlik ve
+kontroldü}.
+
+\keyline{Adımları zaten biliyorsan, onlara modelin karar vermesine gerek yok. Karar verdiğin her şey kontrol kaybıdır.}
+
+\stage{2}{Neden Var}
+Adımlar belliyse orkestrasyonu sen sabitlersin: sıralı adımlar, açık dallanma,
+ve model yalnızca belirli noktalarda belirli alt-görevler için çağrılır. Sonuç:
+öngörülebilirlik, ucuzluk, ve adım adım test edilebilirlik.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2022} tek prompt \tlsep \yr{2023} prompt chaining: bilinen adımları zincirle \tlsep \yr{2023} orkestre boru hatları \tlsep \yr{2024–26} workflow vs agent ayrımı netleşir: kontrol vs otonomi
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Workflow:} Adımları ve kontrol akışını \emph{senin} tanımladığın sistem;
+model belirli noktalarda belirli alt-görevler için çağrılır. Deterministik
+orkestrasyon + olasılıksal adımlar. Agent'ın karşıtı: kararı modele değil,
+koda verirsin.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Workflow bir \textbf{montaj hattıdır}: istasyonlar sabit. Model her istasyonda
+tek bir işi yapan \emph{yetenekli işçidir} --- ama ürünün bir sonraki nereye
+gideceğine \emph{bant} (senin kodun) karar verir, işçi değil. Öngörülebilir ve
+denetlenebilir; karşılığında giderken yeni bir yol icat edemez.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Sabit adımlar + açık dallanma; kontrol akışı kodda, model düğümlerde.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=8mm,
+   box/.style={draw=accent, line width=0.8pt, fill=wash, rounded corners=2pt,
+               minimum height=9mm, minimum width=18mm, align=center},
+   d/.style={draw=accent, line width=0.8pt, fill=wash, diamond, aspect=1.8,
+             align=center, inner sep=0pt, minimum width=20mm},
+   io/.style={draw=softgray, fill=white, rounded corners=8pt, align=center,
+              minimum height=9mm, minimum width=14mm, inner sep=2pt},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+  \node[io] (in) {Girdi};
+  \node[box, right=8mm of in] (s1) {Çıkar\\\textcolor{softgray}{LLM}};
+  \node[d, right=9mm of s1] (s2) {Sınıflandır};
+  \node[box, above right=4mm and 9mm of s2] (s3a) {Özetle\\\textcolor{softgray}{LLM}};
+  \node[box, below right=4mm and 9mm of s2] (s3b) {Yönlendir};
+  \node[io, right=24mm of s2, fill=good!10, draw=good] (out) {Çıktı};
+  \draw[flow] (in) -- (s1);
+  \draw[flow] (s1) -- (s2);
+  \draw[flow] (s2) -- node[above left=-1mm, font=\sffamily\tiny, text=accentdk]{A} (s3a);
+  \draw[flow] (s2) -- node[below left=-1mm, font=\sffamily\tiny, text=accentdk]{B} (s3b);
+  \draw[flow] (s3a) -| (out);
+  \draw[flow] (s3b) -| (out);
+\end{tikzpicture}
+\end{center}
+\keyline{Her ok senin kodundur, modelin kararı değil. Bu yüzden her adım ayrı test edilebilir, maliyet öngörülebilir.}
+
+\stage{7}{Karar Çerçevesi}
+Agent kararının diğer yüzü. Hangi işaretler ne der?\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Workflow seç} & {\sffamily\bfseries\small Agent seç} \\
+\midrule
+Adımlar önceden belli & Adımlar çalışırken belli olur \\
+\addlinespace[2pt]
+Öngörülebilirlik / denetim kritik & Açık uçlu, uyarlanır görev \\
+\addlinespace[2pt]
+Maliyet sabit olmalı & Esneklik değeri riskten yüksek \\
+\addlinespace[2pt]
+Çoğu üretim akışı & Gerçek belirsizlik (azınlık) \\
+\bottomrule
+\end{tabularx}
+\keyline{Varsayılan Workflow. Çoğu ``agent'' aslında birkaç dallanmalı bir workflow'dur.}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Belge İşleme Hattı]
+\textbf{Bağlam.} Gelen belgeler işlenecek: bilgi çıkar, türünü sınıflandır,
+özetle, doğru ekibe yönlendir. İlk sürüm tek bir agent'tı --- güvenilmez ve
+hata ayıklaması zordu.
+
+\smallskip
+\textbf{Çözüm.} Sabit bir workflow: \emph{çıkar → sınıflandır → (türüne göre)
+özetle/yönlendir}. Her adım modelle ama ayrı, test edilebilir bir düğüm.
+
+\smallskip
+\textbf{Sonuç.} Öngörülebilir maliyet, adım adım eval, kolay hata ayıklama.
+Esneklik kaybı yok --- çünkü adımlar zaten baştan belliydi.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Mega-Prompt'' (Adımlara Bölmemek)]
+Çok adımlı bir işi tek bir devasa prompt'a sıkıştırmak --- çıkar, sınıflandır,
+özetle, karar ver; hepsi tek çağrıda. Sonuç: güvenilmez, test edilemez, bir
+adım bozulduğunda nerede bozulduğu görünmez.
+
+\smallskip
+\textbf{Belirti:} ``Dev prompt bazen çalışıyor, neden bozulduğunu bilmiyoruz.''\\
+\textbf{Kök neden:} İş, ayrık ve test edilebilir adımlara bölünmemiş.\\
+\textbf{Düzeltme:} İşi bir workflow'a böl; her adımı ayrı prompt + ayrı eval yap.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{26mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} & {\sffamily\bfseries\small Güçlü} & {\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Workflow} & Öngörülebilir, ucuz, denetlenir & Sabit; açık uçluya uymaz \\
+\addlinespace[2pt]
+\textbf{Agent} & Açık uçlu görev & Öngörülemez; pahalı; zor debug \\
+\addlinespace[2pt]
+\textbf{Prompt chain} & Bilinen düz adımlar & Dallanma/karar zayıf \\
+\addlinespace[2pt]
+\textbf{Tek prompt} & En basit iş & Çok adımlıya yetmez \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{Agent} (karşıtı) \tlsep \term{Prompt Chaining} (basit workflow) \tlsep
+\term{Router} (dallanma noktası) \tlsep \term{Tool Calling} (adımlardaki eylem) \tlsep
+\term{Eval} (adım adım test)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Workflow: adımları ve akışı sen tanımlarsın; model düğümlerde çalışır.
+  \item Öngörülebilir, ucuz, adım adım test edilebilir --- agent'ın veremediği kontrol.
+  \item Adımlar önceden belliyse workflow; ancak gerçek belirsizlikte agent.
+  \item Çok adımlı işi tek mega-prompt'a sıkıştırma; düğümlere böl.
+  \item Çoğu üretim akışı, birkaç dallanmalı bir workflow'dur.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#12 — Adımları biliyorsan onları sen yaz; modele yalnızca dolduramadığın boşlukları bırak.}\\[4pt]
+\normalsize Kontrol bir maliyet değil, bir armağandır. Modele yalnızca gerçekten
+karar gerektiren yeri devret.
+\end{principlebox}

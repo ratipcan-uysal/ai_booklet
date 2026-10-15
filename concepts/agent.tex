@@ -1,0 +1,157 @@
+% ======================================================================
+%  KAVRAM: Agent  (Tier 1)  — kompakt
+% ======================================================================
+
+\concept{Orchestration · Orkestrasyon}{Agent}{Hedef verilen modelin kendi adımlarını seçtiği döngü}
+
+\stage{1}{Problem}
+Açık uçlu görevlerde her adımı önceden yazamazsın. ``Bunu araştır ve en ucuz
+uçuşu bul'' --- atılacak adımlar bulunan şeye göre değişir. Sabit bir akış buna
+uyum sağlayamaz; her olasılığı elle kodlamak imkânsızdır.
+
+\keyline{Bazı görevlerin adımları ancak çalışırken belli olur. Bunları önceden senaryolaştıramazsın --- karar verecek bir şeye ihtiyacın var.}
+
+\stage{2}{Neden Var}
+Agent, kararı modele bırakır: hedefi al, bir eylem seç (genelde bir araç çağrısı),
+sonucu gözlemle, bir sonraki eyleme karar ver, hedef tamamlanana dek döngüye gir.
+Açık uçlu görevlerde \emph{esneklik} kazanırsın --- karşılığında \emph{kontrolü}
+verirsin.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2022} ReAct: düşün → eyle → gözlemle döngüsü \tlsep \yr{2023} function calling: yapılandırılmış araç çağrısı \tlsep \yr{2023} otonom agent dalgası \tlsep \yr{2024–26} multi-agent + orkestrasyon; üretimde kontrollü kullanım
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Agent:} Modelin bir \emph{döngüde} çalıştığı sistem --- hedef verilir;
+model bir eyleme (çoğunlukla araç çağrısı) karar verir, sonucu gözlemler ve
+hedefe ulaşana dek tekrarlar. Dört bileşen: \textbf{hedef + araçlar + döngü + bellek}.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Workflow bir \textbf{tariftir}: adımlar sabit. Agent ise hedef verilen bir
+\textbf{aşçıdır}: ``buzdolabındakiyle akşam yemeği yap.'' Adımları giderken
+kendi seçer. Açık uçlu görevlerde daha yeteneklidir --- ama daha az öngörülebilir:
+yoldan çıkabilir, döngüde sıkışabilir, bütçeyi yakabilir. Güç ve risk aynı
+yerden gelir: kararı ona bıraktın.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Agent bir döngüdür: düşün → eyle → gözlemle, hedefe dek tekrarla.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=11mm,
+   io/.style={draw=softgray, fill=white, rounded corners=8pt, align=center,
+              minimum height=8mm, minimum width=16mm, inner sep=3pt},
+   m/.style={draw=accentdk, fill=accent!12, rounded corners=2pt, align=center,
+             minimum height=10mm, minimum width=18mm},
+   k/.style={draw=accent, fill=wash, rounded corners=2pt, align=center,
+             minimum height=10mm, minimum width=18mm},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+  \node[io] (goal) {Hedef};
+  \node[m, right=12mm of goal] (think) {Düşün\\\textcolor{softgray}{eylem seç}};
+  \node[k, right=14mm of think] (act) {Eyle\\\textcolor{softgray}{araç çağır}};
+  \node[io, below=10mm of think, fill=good!10, draw=good] (done) {Bitti};
+  \draw[flow] (goal) -- (think);
+  \draw[flow] (think) -- (act);
+  \draw[flow] (act.south) .. controls +(0,-8mm) and +(0,-8mm) ..
+        node[below, font=\sffamily\tiny, text=accentdk]{gözlemle} (think.south east);
+  \draw[flow] (think) -- node[left, font=\sffamily\tiny, text=good]{hedefe ulaştı} (done);
+  \node[font=\sffamily\tiny, text=softgray, above=0mm of act] {döngü};
+\end{tikzpicture}
+\end{center}
+\keyline{Döngü kapanmazsa agent durmaz: bütçe, adım sayısı ve durdurma koşulu \emph{senin} koyduğun sınırlardır.}
+
+\stage{7}{Karar Çerçevesi}
+Kitabın en büyük kararı: \textbf{Agent mı, Workflow mu?} Adımlar önceden biliniyor mu?
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=5mm and 8mm,
+   q/.style={draw=accent, line width=0.8pt, fill=wash, diamond, aspect=2.4,
+             align=center, inner sep=1pt, minimum width=32mm},
+   leaf/.style={draw=accentdk, line width=0.8pt, rounded corners=2pt,
+                fill=accent!12, align=center, inner sep=4pt, minimum width=22mm},
+   wf/.style={draw=softgray, line width=0.8pt, rounded corners=2pt,
+                fill=white, align=center, inner sep=4pt, minimum width=22mm},
+   yes/.style={good, font=\sffamily\bfseries\scriptsize},
+   no/.style={warn, font=\sffamily\bfseries\scriptsize},
+   ed/.style={-{Stealth[length=2mm]}, softgray, line width=0.7pt}]
+  \node[q] (q1) {Adımlar önceden\\biliniyor mu?};
+  \node[wf, below left=13mm and -2mm of q1] (wf1) {\textbf{Workflow}\\öngörülebilir · ucuz};
+  \node[q, below right=13mm and -2mm of q1] (q2) {Öngörülebilirlik\\kritik mi?};
+  \node[wf, below left=13mm and 4mm of q2, minimum width=20mm] (wf2) {\textbf{Workflow}\\(+ dar agent)};
+  \node[leaf, below right=13mm and 4mm of q2, minimum width=20mm] (ag) {\textbf{Agent}\\+ sınır + eval};
+  \draw[ed] (q1) -- node[yes,left]{Evet} (wf1);
+  \draw[ed] (q1) -- node[no,right]{Hayır} (q2);
+  \draw[ed] (q2) -- node[yes,left]{Evet} (wf2);
+  \draw[ed] (q2) -- node[no,right]{Hayır} (ag);
+\end{tikzpicture}
+\end{center}
+\keyline{Varsayılan Workflow olsun. Agent'ı yalnızca adımlar gerçekten önceden bilinemiyorken seç.}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Agent'tan Workflow'a Geri Çekilmek]
+\textbf{Bağlam.} Bir ekip her şeyi tek bir otonom agent'la çözmeye çalışıyor.
+Maliyetler öngörülemez, hata ayıklama imkânsız, bazı koşular dakikalarca döngüde
+kalıyor.
+
+\smallskip
+\textbf{Çözüm.} Vakaların \%90'ının aslında \emph{sabit} adımlardan oluştuğu
+görülür. Bunlar deterministik bir workflow'a alınır; agent yalnızca gerçekten
+açık uçlu \%10'luk ``kuyruk'' için, sıkı bütçe ve adım sınırıyla saklanır.
+
+\smallskip
+\textbf{Sonuç.} Maliyet öngörülebilir, hata ayıklama kolay, kalite artar ---
+agent'ın esnekliği yalnızca gerçekten gerektiği yerde ödenir.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Her Problem Bir Agent'']
+Deterministik bir workflow'un daha ucuz, hızlı ve güvenilir olacağı yerde otonom
+agent kullanmak. Sabit, basit görevler için agent: öngörülemez maliyet, zor hata
+ayıklama, döngüde sıkışma.
+
+\smallskip
+\textbf{Belirti:} ``Basit bir iş için agent kurduk; maliyet ve davranış kontrolden çıktı.''\\
+\textbf{Kök neden:} Esnekliği her yerde istemek; kontrolün değerini görmemek.\\
+\textbf{Düzeltme:} Varsayılanı workflow yap; agent'ı yalnızca açık uçlu kuyruğa, sınırlarla uygula.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{26mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} & {\sffamily\bfseries\small Güçlü} & {\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Agent} & Açık uçlu, uyarlanır görev & Öngörülemez; pahalı; zor debug \\
+\addlinespace[2pt]
+\textbf{Workflow} & Öngörülebilir, ucuz, denetlenir & Sabit; uyum sağlamaz \\
+\addlinespace[2pt]
+\textbf{Tek prompt} & En basit görev & Çok adımlı/araçlı işe yetmez \\
+\addlinespace[2pt]
+\textbf{Prompt chain} & Bilinen birkaç adım & Dallanma/karar gerekirse yetersiz \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{Workflow} (karşıtı; varsayılan) \tlsep \term{Tool Calling} (eylem mekanizması) \tlsep
+\term{Reasoning} (planning/think adımı) \tlsep \term{Memory} (uzun görev belleği) \tlsep
+\term{Multi-Agent} (birden çok agent) \tlsep \term{Router} (basit dağıtım)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Agent: hedef + araçlar + döngü + bellek; model kendi adımlarını seçer.
+  \item Esneklik kazandırır, kontrolü alır --- güç ve risk aynı yerden gelir.
+  \item Adımlar önceden biliniyorsa Workflow; ancak gerçekten açık uçluysa Agent.
+  \item Sınır senin sorumluluğun: bütçe, adım sayısı, durdurma koşulu, eval.
+  \item ``Her problem bir agent'' kitabın en pahalı anti-pattern'idir.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#11 — Kontrol edebildiğin her şeyi workflow yap; agent'ı yalnızca mecbur kalınca kullan.}\\[4pt]
+\normalsize Otonomi bir maliyettir, bir özellik değil. Yalnızca adımları önceden
+bilemediğin gerçek belirsizlik için öde.
+\end{principlebox}

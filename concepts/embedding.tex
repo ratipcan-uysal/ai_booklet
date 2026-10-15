@@ -1,0 +1,234 @@
+% ======================================================================
+%  KAVRAM: Embedding  (Tier 1)
+% ======================================================================
+
+\concept{Knowledge · Bilgi}{Embedding}{Anlamı koordinata çevirmek: benzer anlam, yakın konum}
+
+% ----------------------------------------------------------------------
+\stage{1}{Problem}
+% ----------------------------------------------------------------------
+Bilgisayar için ``araba'' ve ``otomobil'' tamamen alakasız iki karakter
+dizisidir --- ortak harf bile yok. Oysa anlamca aynı şey. Metni harf harf
+karşılaştırdığın sürece, eş anlamlıları, yakın kavramları, aynı soruyu farklı
+kelimelerle soran kullanıcıyı asla yakalayamazsın.
+
+\keyline{Sorun: anlam, yazımın içinde değildir. Anlamı aramak için metni anlamın yaşadığı bir uzaya taşımamız gerekir.}
+
+Klasik anahtar kelime araması (\en{keyword search}) tam da burada çöker:
+kullanıcı ``yağmurluk'' arar, kataloğunda ``su geçirmez mont'' yazar, ve hiçbir
+sonuç dönmez --- aynı şey olmasına rağmen.
+
+% ----------------------------------------------------------------------
+\stage{2}{Neden Var}
+% ----------------------------------------------------------------------
+Anlama göre arama, kümeleme ve karşılaştırma yapabilmek için metni \emph{sayısal}
+ve \emph{anlam-koruyan} bir biçime çevirmemiz gerekir. Embedding tam bunu yapar:
+benzer anlamlı metinleri uzayda birbirine yakın noktalara yerleştirir.
+
+Bu sayede ``benzerlik'' artık bir geometri sorusuna dönüşür: iki metin ne kadar
+yakınsa, anlamca o kadar ilişkilidir. Retrieval, öneri, kümeleme, deduplikasyon ---
+hepsi bu tek fikrin üzerine kurulur.
+
+% ----------------------------------------------------------------------
+\stage{3}{Tarihçe}
+% ----------------------------------------------------------------------
+\begin{timeline}
+\yr{2000'ler} TF-IDF / bag-of-words: yazımı yakalar, anlamı değil \tlsep \yr{2013} word2vec / GloVe: ``kral − erkek + kadın ≈ kraliçe'' \tlsep \yr{2018} BERT: bağlama duyarlı temsiller \tlsep \yr{2022–26} cümle/doküman embedding API'leri → RAG'in temeli
+\end{timeline}
+
+% ----------------------------------------------------------------------
+\stage{4}{Tanım}
+% ----------------------------------------------------------------------
+\begin{problembox}
+\textbf{Embedding:} Bir metin parçasının anlamını temsil eden, sabit uzunlukta
+bir sayı vektörü --- öyle ki anlamsal benzerlik $\approx$ geometrik yakınlık
+(genellikle \term{cosine similarity} ile ölçülür).
+\end{problembox}
+
+Örneğin bir model her metni 1536 boyutlu bir vektöre çevirebilir. ``Araba'' ve
+``otomobil'' bu uzayda neredeyse üst üste düşerken, ``araba'' ve ``muz''
+birbirinden uzaktır.
+
+% ----------------------------------------------------------------------
+\stage{5}{Zihinsel Model}
+% ----------------------------------------------------------------------
+\begin{mentalbox}
+Devasa bir \textbf{kütüphane} düşün --- ama kitaplar alfabetik değil,
+\emph{konuya} göre yerleştirilmiş. Yemek kitapları bir köşede, astrofizik başka
+bir köşede; birbirine yakın fikirler fiziksel olarak da yan yana.
+
+\smallskip
+Embedding, bir metnin bu ``anlam haritasındaki koordinatıdır''. Arama yapmak
+artık raf numarası eşleştirmek değil, \emph{haritada en yakın komşulara bakmaktır}.
+\end{mentalbox}
+
+% ----------------------------------------------------------------------
+\stage{6}{Mimari Diyagram}
+% ----------------------------------------------------------------------
+Solda metni vektöre çeviren boru hattı; sağda anlamın 2 boyuta indirgenmiş hâli ---
+benzer kavramlar kümeleniyor, sorgu en yakın komşularını buluyor.
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize]
+  % --- Sol: pipeline ---
+  \node[draw=softgray, fill=white, rounded corners=8pt, minimum height=8mm,
+        minimum width=20mm, align=center] (txt) {``su geçirmez\\mont''};
+  \node[draw=accent, fill=wash, rounded corners=2pt, below=6mm of txt,
+        minimum height=10mm, minimum width=24mm, align=center] (emb)
+        {Embedding\\modeli};
+  \node[draw=accentdk, fill=accent!12, rounded corners=2pt, below=6mm of emb,
+        minimum height=8mm, minimum width=24mm, align=center, font=\ttfamily\tiny]
+        (vec) {[0.21, -0.34,\\0.88, ...]};
+  \draw[-{Stealth[length=2mm]}, accent, line width=0.8pt] (txt) -- (emb);
+  \draw[-{Stealth[length=2mm]}, accent, line width=0.8pt] (emb) -- (vec);
+
+  % --- Sağ: 2B anlam uzayı ---
+  \begin{scope}[shift={(52mm,-20mm)}]
+    \draw[hairline, line width=0.8pt, -{Stealth[length=1.6mm]}] (0,0) -- (52mm,0);
+    \draw[hairline, line width=0.8pt, -{Stealth[length=1.6mm]}] (0,0) -- (0,40mm);
+    \node[anchor=south west, font=\sffamily\bfseries\tiny, text=softgray]
+          at (0,40mm) {ANLAM UZAYI \,(2B'ye indirgenmiş)};
+
+    % Giyim kümesi (yayılmış; etiketler 4 farklı yönde)
+    \draw[accent, dashed, line width=0.5pt] (11mm,30mm) circle (9.5mm);
+    \fill[accent] (17mm,35mm) circle (1.1mm) node[right=1mm,font=\tiny,text=ink]{yağmurluk};
+    \fill[accent] (9mm,28mm)  circle (1.1mm) node[below left=0mm and -0.5mm,font=\tiny,text=ink]{mont};
+    \fill[accent] (5mm,24mm)  circle (1.1mm) node[left=1mm,font=\tiny,text=ink]{ceket};
+
+    % Taşıt kümesi
+    \fill[good] (40mm,10mm) circle (1.1mm) node[right=1mm,font=\tiny,text=ink]{araba};
+    \fill[good] (44mm,13mm) circle (1.1mm) node[right=1mm,font=\tiny,text=ink]{otomobil};
+    \fill[good] (38mm,7mm) circle (1.1mm) node[below=0.5mm,font=\tiny,text=ink]{kamyon};
+
+    % Sorgu (kırmızı, etiket yukarıda)
+    \fill[warn] (14mm,32mm) circle (1.3mm);
+    \node[font=\sffamily\tiny, text=warn, above=0.5mm of {(14mm,32mm)}] {sorgu};
+  \end{scope}
+\end{tikzpicture}
+\end{center}
+
+\keyline{``Yağmurluk'' sorgusu, harf benzerliğine değil anlam yakınlığına göre ``su geçirmez mont''un yanına düşer.}
+
+% ----------------------------------------------------------------------
+\stage{7}{Karar Çerçevesi}
+% ----------------------------------------------------------------------
+Hangi embedding modeli, ne zaman yeniden embed? Yanlış seçim tüm retrieval'ı
+sessizce bozar.
+
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize, node distance=5mm and 8mm,
+   q/.style={draw=accent, line width=0.8pt, fill=wash, diamond, aspect=2.4,
+             align=center, inner sep=1pt, minimum width=30mm},
+   leaf/.style={draw=accentdk, line width=0.8pt, rounded corners=2pt,
+                fill=accent!12, align=center, inner sep=4pt, minimum width=24mm},
+   yes/.style={good, font=\sffamily\bfseries\scriptsize},
+   no/.style={warn, font=\sffamily\bfseries\scriptsize},
+   ed/.style={-{Stealth[length=2mm]}, softgray, line width=0.7pt}]
+
+  \node[q] (q1) {Çok dilli içerik\\var mı?};
+  \node[leaf, below left=14mm and -4mm of q1] (multi) {\textbf{Çok dilli model}};
+  \node[q, below right=14mm and -4mm of q1] (q2) {Alan çok özel mi?\\(tıp, hukuk)};
+  \node[leaf, below left=13mm and 2mm of q2, minimum width=22mm] (domain) {\textbf{Alan modeli}\\/ fine-tune};
+  \node[leaf, below right=13mm and 2mm of q2, minimum width=22mm] (general) {\textbf{Genel model}\\(varsayılan)};
+
+  \draw[ed] (q1) -- node[yes,left]{Evet} (multi);
+  \draw[ed] (q1) -- node[no,right]{Hayır} (q2);
+  \draw[ed] (q2) -- node[yes,left]{Evet} (domain);
+  \draw[ed] (q2) -- node[no,right]{Hayır} (general);
+\end{tikzpicture}
+\end{center}
+
+\keyline{Altın kural: İndeks ve sorgu \emph{aynı} embedding modeliyle üretilmeli. Model değişirse tüm indeks yeniden embed edilmeli.}
+
+% ----------------------------------------------------------------------
+\stage{8}{Üretim Senaryosu}
+% ----------------------------------------------------------------------
+\begin{prodbox}[Üretim Senaryosu · Anlamsal Ürün Araması]
+\textbf{Bağlam.} Bir e-ticaret sitesinde arama anahtar kelimeye dayalı.
+``Yağmurluk'' arayan kullanıcı, ürünler ``su geçirmez mont'' diye etiketlendiği
+için boş sonuç görüyor; satış kaçıyor.
+
+\smallskip
+\textbf{Çözüm.} Tüm ürün açıklamaları bir embedding modeliyle vektöre çevrilip
+vektör DB'ye yazılır. Arama sorgusu da aynı modelle embed edilir; en yakın
+komşular getirilir.
+
+\smallskip
+\textbf{Sonuç.} ``Yağmurluk'', ``su geçirmez mont''u bulur; ``hediye'' aramak
+ilgili kategorileri yüzeye çıkarır. Arama artık yazımı değil \textbf{niyeti}
+yakalar.
+\end{prodbox}
+
+% ----------------------------------------------------------------------
+\stage{9}{Anti-pattern}
+% ----------------------------------------------------------------------
+\begin{antibox}[Anti-pattern · ``Karışık Uzay'']
+İndeksi bir modelle, sorguyu başka bir modelle (veya model güncellendikten
+sonra) embed etmek; ya da kocaman bir metni tek vektöre sıkıştırıp anlamı
+ortalama bir bulamaca çevirmek. İki vektör farklı uzaylardaysa ``yakınlık''
+anlamsızdır.
+
+\smallskip
+\textbf{Belirti:} ``Retrieval alakasız sonuçlar getiriyor, neden bilmiyoruz.''\\
+\textbf{Kök neden:} İndeks ve sorgu aynı anlam uzayında değil; veya chunk çok büyük.\\
+\textbf{Düzeltme:} Tek model sabitle, sürümü kaydet; makul boyutta chunk'la; model değişiminde yeniden embed et.
+\end{antibox}
+
+% ----------------------------------------------------------------------
+\stage{10}{Alternatifler \& Ödünleşimler}
+% ----------------------------------------------------------------------
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} &
+{\sffamily\bfseries\small Güçlü olduğu yer} &
+{\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Lexical (BM25)} & Tam terim, kod, isim, nadir kelime &
+Eş anlam/parafrazı kaçırır \\
+\addlinespace[3pt]
+\textbf{Dense embedding} & Anlam, eş anlam, niyet &
+Tam terimde zayıf; model bağımlı \\
+\addlinespace[3pt]
+\textbf{Hybrid} & İkisinin gücünü birleştirir &
+Daha karmaşık; ayar gerektirir \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+Production'da en sağlam retrieval genelde \textbf{hybrid}'dir: anlamsal yakınlık +
+tam terim eşleşmesi.
+
+% ----------------------------------------------------------------------
+\stage{11}{İlişkili Kavramlar}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item \term{Vector Database} --- embedding'leri saklar ve hızlı komşu araması yapar.
+  \item \term{Similarity Search} --- en yakın vektörleri bulma işlemi.
+  \item \term{Cosine Similarity} --- iki vektörün anlamsal yakınlık ölçüsü.
+  \item \term{RAG} --- embedding tabanlı retrieval'ı cevaba bağlar.
+  \item \term{Chunking} --- neyin embed edileceğini belirler; vektörün kalitesini etkiler.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{12}{Özet}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item Embedding, metni \textbf{anlam-koruyan} bir sayı vektörüne çevirir.
+  \item Benzer anlam $\approx$ yakın konum; benzerlik bir geometri sorusuna döner.
+  \item Yazım yerine \emph{niyeti} yakalar: ``yağmurluk'' $\to$ ``su geçirmez mont''.
+  \item İndeks ve sorgu aynı modelle, aynı uzayda üretilmelidir.
+  \item Tam terim önemliyse lexical ile birleştir (hybrid).
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{13}{Mühendislik İlkesi}
+% ----------------------------------------------------------------------
+\begin{principlebox}
+\textbf{İlke \#4 — Anlamı arıyorsan, anlamı temsil eden uzayda ara.}\\[4pt]
+\normalsize Harf benzerliği anlam benzerliği değildir. Embedding bu boşluğu
+kapatır --- ama yalnızca karşılaştırdığın her vektör \emph{aynı uzaydaysa}.
+\end{principlebox}

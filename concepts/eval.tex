@@ -1,0 +1,155 @@
+% ======================================================================
+%  KAVRAM: Eval  (Tier 1)  — kompakt
+% ======================================================================
+
+\concept{Production · Üretim}{Eval}{Olasılıksal kaliteyi izlenebilir bir sayıya çevirmek}
+
+\stage{1}{Problem}
+Prompt'u (veya modeli) değiştirdin --- daha mı iyi oldu? Bilmiyorsun. AI'ın
+kalitesi ölçülmeden görünmez. ``Daha iyi görünüyor'' mühendislik değildir; ve
+ölçmediğin sürece gerilemeler (\en{regression}) sessizce production'a gider.
+
+\keyline{Olasılıksal bir sistemde doğruluğu \emph{kanıtlayamazsın}; yalnızca kaliteyi sistemli biçimde \emph{ölçebilirsin}. Eval bunu yapar.}
+
+\stage{2}{Neden Var}
+AI çıktısı her seferinde değişebildiği için tek bir çalıştırma hiçbir şey
+kanıtlamaz. Eval, ``iyi görünüyor''u izlenebilir bir sayıya çevirir: sürümleri
+karşılaştırabilir, gerilemeleri yakalayabilir ve sürüm çıkışını bu sayıya
+bağlayabilirsin (\en{gate}).
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2020} elle nokta kontrol \tlsep \yr{2022} benchmark'lar \tlsep \yr{2023} LLM-as-judge: model, modeli puanlar \tlsep \yr{2024–26} sürekli eval / eval-driven development: her değişiklik ölçülür
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Eval:} AI çıktılarının kalitesini bir veri kümesi üzerinde, metrik
+ve/veya yargıçla (\en{judge}) sistemli biçimde ölçme --- sürümleri karşılaştırmak
+ve gerilemeleri yakalamak için. Üç bileşen: \textbf{veri kümesi} (golden) +
+\textbf{metrik/judge} + \textbf{harness}.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Eval, \textbf{olasılıksal sistemler için birim testidir}. Çıktının birebir
+eşitliğini iddia edemezsin, ama ``bu vakalarda şu özellikleri, şu oranda
+sağlıyor'' diye iddia edebilirsin. Eval'siz her değişiklik kör bir bahistir ---
+göstergesiz uçak kullanmak gibi.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Eval bir döngüdür: sabit veri kümesinde çalıştır, puanla, baseline ile karşılaştır, geçir veya durdur.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=9mm,
+   store/.style={draw=accentdk, fill=accent!12, cylinder, shape border rotate=90,
+                 aspect=0.25, minimum height=13mm, minimum width=18mm, align=center},
+   box/.style={draw=accent, line width=0.8pt, fill=wash, rounded corners=2pt,
+               minimum height=9mm, minimum width=18mm, align=center},
+   g/.style={draw=good, line width=0.9pt, fill=good!10, diamond, aspect=1.8,
+             align=center, inner sep=0pt, minimum width=20mm},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+  \node[store] (data) {Golden\\veri kümesi};
+  \node[box, right=12mm of data] (run) {Sistemi\\çalıştır};
+  \node[box, right=12mm of run] (judge) {Judge /\\metrik};
+  \node[g, below=10mm of judge] (gate) {Baseline'ı\\geçti mi?};
+  \node[box, left=12mm of gate, fill=good!12, draw=good] (ship) {Geç \ding{51}};
+  \node[box, below=7mm of gate, draw=warn, fill=warmwash] (block) {Durdur};
+  \draw[flow] (data) -- (run);
+  \draw[flow] (run) -- (judge);
+  \draw[flow] (judge) -- node[right, font=\sffamily\tiny, text=accentdk]{skor} (gate);
+  \draw[flow] (gate) -- node[above, font=\sffamily\tiny, text=good]{Evet} (ship);
+  \draw[flow] (gate) -- node[right, font=\sffamily\tiny, text=warn]{Hayır} (block);
+\end{tikzpicture}
+\end{center}
+\keyline{Anahtar: tek bir toplam sayı değil, \emph{vaka vaka} bak --- ortalama iyileşirken bazı vakalar gerileyebilir.}
+
+\stage{7}{Karar Çerçevesi}
+Hangi eval yöntemi? Çıktının doğası ve riski belirler.\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{42mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Çıktı / durum} & {\sffamily\bfseries\small Yöntem} \\
+\midrule
+Nesnel, tek doğru cevap & Metrik / tam eşleşme \\
+Öznel kalite (özet, ton) & LLM-judge + rubric \\
+Yüksek risk / kritik & İnsan değerlendirmesi \\
+Ölçek + süreklilik gerek & Judge model (otomatik) \\
+\bottomrule
+\end{tabularx}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Sessiz Gerileme]
+\textbf{Bağlam.} Ekip ``daha iyi'' bir prompt yayınlıyor. Birkaç örnekte iyi
+görünüyor --- ama vakaların \%15'inde sessizce gerilemiş; bunu ancak kullanıcı
+şikâyetlerinden öğreniyorlar.
+
+\smallskip
+\textbf{Çözüm.} Temsili bir \textbf{golden dataset} kurulur. Her prompt/model
+değişikliği bu kümede çalıştırılıp puanlanır; baseline'ın altına düşen değişiklik
+\emph{otomatik durdurulur} (gate).
+
+\smallskip
+\textbf{Sonuç.} Gerilemeler kullanıcıya değil, CI'a yakalanır. ``Daha iyi
+görünüyor'' yerine ``skor 0.82 → 0.87'' konuşulur.
+\end{prodbox}
+
+\vspace{2pt}
+Bir golden eval-case somut olarak şuna benzer:
+\begin{artifact}[Golden Eval Case]
+girdi:\ \ \ \ "Siparişim ne zaman gelir? (sipariş \#4471)"\\
+beklenen:\ - gerçek teslim tarihini içerir\\
+\ \ \ \ \ \ \ \ \ - araç sonucuna dayanır (grounding)\\
+\ \ \ \ \ \ \ \ \ - tavsiye vermez\\
+judge:\ \ \ \ doğruluk 2/2 · grounding 2/2 · güvenlik: geç
+\end{artifact}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Deployment'tan Sonra Eval'']
+Hiç eval yapmadan, sezgiyle yayınlamak; gerilemeleri kullanıcıdan öğrenmek. Ya
+da tek bir toplam sayıyı kovalamak (vaka bazlı gerilemeleri gizler); ya da eval'i
+eğitim/örnek verisi üzerinde yapmak (sızıntı).
+
+\smallskip
+\textbf{Belirti:} ``Production'da bozulduğunu kullanıcılar söyledi.''\\
+\textbf{Kök neden:} Kalite yayından önce ölçülmüyor; ölçülse de yanlış ölçülüyor.\\
+\textbf{Düzeltme:} Bağımsız golden dataset, vaka bazlı bakış, her değişikliği gate'le.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{28mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yöntem} & {\sffamily\bfseries\small Güçlü} & {\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Elle inceleme} & Esnek, nüanslı & Ölçeklenmez; öznel \\
+\addlinespace[2pt]
+\textbf{Metrik (otomatik)} & Hızlı, ucuz, tekrarlanır & Yalnız nesnel görevlerde \\
+\addlinespace[2pt]
+\textbf{LLM-judge} & Öznel kaliteyi ölçeklendirir & Yargıç yanlılığı; kalibrasyon \\
+\addlinespace[2pt]
+\textbf{İnsan eval} & En güvenilir & Pahalı, yavaş \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{Golden Dataset} (eval'in temeli) \tlsep \term{Judge Model} (otomatik puanlama) \tlsep
+\term{Benchmark} \tlsep \term{Rubrics} (judge kriterleri) \tlsep \term{Regression} (yakalanan gerileme) \tlsep
+\term{Continuous Evaluation}
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Olasılıksal sistemde doğruluk kanıtlanmaz, kalite ölçülür.
+  \item Eval = olasılıksal sistemler için birim testi: dataset + judge/metrik + harness.
+  \item Tek toplam sayıya değil, vaka vaka bak.
+  \item Her değişikliği bağımsız golden dataset'te gate'le.
+  \item ``Daha iyi görünüyor'' mühendislik değildir; bir sayı göster.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#13 — Ölçemediğin kaliteyi iyileştiremezsin.}\\[4pt]
+\normalsize Eval'i sonradan eklenecek bir lüks değil, geliştirmenin pusulası say.
+Eval'siz her ``iyileştirme'' kör bir bahistir.
+\end{principlebox}

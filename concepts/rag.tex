@@ -1,0 +1,268 @@
+% ======================================================================
+%  KAVRAM: RAG — Retrieval-Augmented Generation
+%  13 aşamalı standart bölüm yapısı
+% ======================================================================
+
+\concept{Knowledge · Bilgi}{RAG}{Modelin eğitilmediği bilgiyi, doğru anı geldiğinde önüne koymak}
+
+% ----------------------------------------------------------------------
+\stage{1}{Problem}
+% ----------------------------------------------------------------------
+Bir LLM, yalnızca eğitim verisinde gördüğü dünyayı bilir. Şirketinizin dünkü
+fiyat listesini, kapalı bir Confluence sayfasını ya da bu sabah yazılmış bir
+sözleşmeyi bilmez. Üstelik bilmediğini de söylemez: emin bir tonla
+\en{hallucination} üretir.
+
+\keyline{Soru şu değil: ``Model bunu biliyor mu?'' \quad Soru şu: ``Bu bilgiyi cevap anında modelin önüne nasıl koyarım?''}
+
+İki kolay ama yanlış çözüm akla gelir. Birincisi: \emph{her şeyi prompt'a
+doldurmak} --- ama context window sınırlı, pahalı ve dolu context doğruluğu
+düşürür (\en{lost in the middle}). İkincisi: \emph{modeli yeniden eğitmek}
+(\en{fine-tuning}) --- ama bilgi her gün değişiyorsa her gün yeniden eğitmek
+sürdürülemez. RAG bu iki uç arasındaki pratik orta yoldur.
+
+% ----------------------------------------------------------------------
+\stage{2}{Neden Var}
+% ----------------------------------------------------------------------
+RAG, bir bilgi sistemindeki iki temel kaygıyı ayırır: \textbf{bilmek} ve
+\textbf{akıl yürütmek}. Modelin işi akıl yürütmek ve dil üretmektir; bilginin
+güncel, doğru ve izlenebilir tutulması ise bir \emph{retrieval} sisteminin
+işidir. Bu ayrım sayesinde:
+
+\begin{itemize}
+  \item Bilgi değiştiğinde modeli değil, yalnızca veri kaynağını güncellersiniz.
+  \item Cevabın \emph{kaynağını} gösterebilirsiniz (\en{citation}, denetlenebilirlik).
+  \item Yetki sınırını veride uygularsınız: kullanıcı yalnızca erişebildiği belgeden cevap alır.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{3}{Tarihçe}
+% ----------------------------------------------------------------------
+\begin{timeline}
+\yr{2017} Transformer \tlsep \yr{2020} ``RAG'' makalesi (Lewis vd.): parametrik + parametrik-olmayan bellek \tlsep \yr{2022} embedding API + vektör DB (FAISS, Pinecone) \tlsep \yr{2023–24} hybrid search · re-ranking · chunking olgunlaşır → varsayılan bilgi katmanı
+\end{timeline}
+
+% ----------------------------------------------------------------------
+\stage{4}{Tanım}
+% ----------------------------------------------------------------------
+\begin{problembox}
+\textbf{RAG (Retrieval-Augmented Generation):} Bir kullanıcı sorusuna cevap
+üretmeden \emph{önce}, ilgili bilgi parçalarını harici bir bilgi kaynağından
+arayıp bulan (\en{retrieval}) ve bu parçaları modelin context'ine ekleyerek
+cevabı bu kanıta dayandıran (\en{augmented generation}) mimari desen.
+\end{problembox}
+
+İki ayrı zamandan oluşur: belgelerin önceden işlenip indekslendiği
+\textbf{ingestion} (yazma) zamanı ve sorunun cevaplandığı \textbf{query} (okuma)
+zamanı. Çoğu hata bu ikisinin karıştırılmasından doğar.
+
+% ----------------------------------------------------------------------
+\stage{5}{Zihinsel Model}
+% ----------------------------------------------------------------------
+\begin{mentalbox}
+RAG'i \textbf{açık kitap sınavına giren çok zeki bir öğrenci} gibi düşünün.
+Öğrenci (LLM) konuyu akıl yürüterek çözebilir, ama soruyu görmeden önce
+\emph{doğru sayfayı açıp önüne koymanız} gerekir. Yanlış sayfayı açarsanız,
+öğrenci ne kadar zeki olursa olsun yanlış kaynaktan emin emin cevap verir.
+
+\smallskip
+Yani RAG'in kalitesi modelin zekâsından çok \textbf{doğru sayfayı bulma}
+becerisine bağlıdır. ``Kötü RAG'' neredeyse her zaman ``kötü retrieval''dır.
+\end{mentalbox}
+
+% ----------------------------------------------------------------------
+\stage{6}{Mimari Diyagram}
+% ----------------------------------------------------------------------
+İki ayrı boru hattı. Üstte bir kez (ve veri değiştikçe) çalışan
+\textbf{ingestion}; altta her soruda çalışan \textbf{query}.
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize,
+   node distance=6mm,
+   box/.style={draw=accent, line width=0.8pt, rounded corners=2pt,
+               fill=wash, minimum height=9mm, minimum width=15mm,
+               align=center, inner sep=3pt},
+   store/.style={draw=accentdk, line width=0.9pt, fill=accent!12,
+                 cylinder, shape border rotate=90, aspect=0.25,
+                 minimum height=12mm, minimum width=16mm, align=center},
+   io/.style={draw=softgray, line width=0.7pt, fill=white, rounded corners=8pt,
+              minimum height=9mm, align=center, inner sep=4pt},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+
+  % --- Ingestion satırı ---
+  \node[io]  (docs)  {Belgeler\\\textcolor{softgray}{PDF · wiki · DB}};
+  \node[box, right=of docs] (chunk) {Chunking\\\textcolor{softgray}{parçala}};
+  \node[box, right=of chunk] (embed1){Embedding\\\textcolor{softgray}{vektörle}};
+  \node[store, right=of embed1] (vdb) {Vector\\DB};
+
+  \draw[flow] (docs)  -- (chunk);
+  \draw[flow] (chunk) -- (embed1);
+  \draw[flow] (embed1)-- (vdb);
+
+  \node[above=2mm of chunk, text=accentdk, font=\sffamily\bfseries\scriptsize]
+        {\,1 · INGESTION  (veri değiştikçe)\,};
+
+  % --- Query satırı ---
+  \node[io, below=16mm of docs] (q) {Kullanıcı\\sorusu};
+  \node[box, right=of q] (embed2) {Embedding\\\textcolor{softgray}{vektörle}};
+  \node[box, right=of embed2] (search) {Similarity\\Search};
+  \node[box, right=of search] (rerank) {Re-rank\\\textcolor{softgray}{öncele}};
+
+  \draw[flow] (q)      -- (embed2);
+  \draw[flow] (embed2) -- (search);
+  \draw[flow] (search) -- (rerank);
+  \draw[flow] (vdb.south) .. controls +(0,-7mm) and +(0,7mm) .. (search.north);
+
+  \node[below=2mm of embed2, text=accentdk, font=\sffamily\bfseries\scriptsize]
+        {\,2 · QUERY  (her soruda)\,};
+
+  % --- Cevap üretimi ---
+  \node[box, below=10mm of rerank, fill=accent, text=white,
+        draw=accentdk, minimum width=22mm] (ctx)
+        {Context Builder\\soru + kanıt};
+  \node[io, left=8mm of ctx, draw=accentdk] (llm) {LLM};
+  \node[io, left=8mm of llm, fill=good!10, draw=good] (ans)
+        {Cevap\\\textcolor{good}{+ kaynak}};
+
+  \draw[flow] (rerank.south) .. controls +(0,-6mm) and +(0,6mm) .. (ctx.north);
+  \draw[flow] (ctx) -- (llm);
+  \draw[flow] (llm) -- (ans);
+\end{tikzpicture}
+\end{center}
+
+\keyline{Kritik içgörü: cevabın kalitesi, soldaki ``Cevap'' kutusuna ulaşmadan çok önce, sağdaki ``Search/Re-rank'' adımında belirlenir.}
+
+% ----------------------------------------------------------------------
+\stage{7}{Karar Çerçevesi}
+% ----------------------------------------------------------------------
+``RAG mı, fine-tuning mi, yoksa düz context mi?'' Karar bilginin
+\emph{ne sıklıkla değiştiği} ve \emph{ne kadar büyük} olduğuyla başlar.
+
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize, node distance=5mm and 9mm,
+   q/.style={draw=accent, line width=0.8pt, fill=wash, diamond, aspect=2.2,
+             align=center, inner sep=1pt, minimum width=30mm},
+   leaf/.style={draw=accentdk, line width=0.8pt, rounded corners=2pt,
+                fill=accent!12, align=center, inner sep=4pt, minimum width=22mm},
+   yes/.style={good, font=\sffamily\bfseries\scriptsize},
+   no/.style={warn, font=\sffamily\bfseries\scriptsize},
+   ed/.style={-{Stealth[length=2mm]}, softgray, line width=0.7pt}]
+
+  \node[q] (q1) {Bilgi sık\\değişiyor mu?};
+  \node[q, below left=14mm and 6mm of q1] (q2) {Tek seferde\\sığacak kadar\\küçük mü?};
+  \node[leaf, below right=14mm and 4mm of q1] (rag1) {\textbf{RAG}\\güncel kaynak};
+
+  \node[leaf, below left=12mm and -6mm of q2] (ctx) {\textbf{Düz context}\\prompt'a koy};
+  \node[q, below right=12mm and 2mm of q2] (q3) {Davranış mı,\\bilgi mi\\gerekiyor?};
+
+  \node[leaf, below left=12mm and -8mm of q3] (rag2) {\textbf{RAG}};
+  \node[leaf, below right=12mm and -8mm of q3] (ft) {\textbf{Fine-tune}\\stil/format};
+
+  \draw[ed] (q1) -- node[yes,above]{Evet} (rag1);
+  \draw[ed] (q1) -- node[no,above left]{Hayır} (q2);
+  \draw[ed] (q2) -- node[yes,left]{Evet} (ctx);
+  \draw[ed] (q2) -- node[no,right]{Hayır} (q3);
+  \draw[ed] (q3) -- node[yes,left]{Bilgi} (rag2);
+  \draw[ed] (q3) -- node[no,right]{Davranış} (ft);
+\end{tikzpicture}
+\end{center}
+
+\keyline{Pratik kural: Önce RAG. Fine-tuning'i yalnızca \emph{üslup/format} sorunlarında veya RAG kanıtlanmış biçimde yetmediğinde düşün.}
+
+% ----------------------------------------------------------------------
+\stage{8}{Üretim Senaryosu}
+% ----------------------------------------------------------------------
+\begin{prodbox}[Üretim Senaryosu · SaaS Destek Asistanı]
+\textbf{Bağlam.} 40.000 makalelik yardım merkezi olan bir B2B SaaS şirketi,
+müşteri destek asistanı kuruyor. Dokümanlar haftada onlarca kez güncelleniyor.
+
+\smallskip
+\textbf{Çözüm.} Makaleler başlık + paragraf sınırlarına göre \term{chunk}'lanır
+(\(\sim\)500 token, 50 token örtüşme). Her chunk embed edilip vektör DB'ye yazılır.
+Soruda hybrid search (anlamsal + anahtar kelime) ilk 20 chunk'ı getirir,
+bir re-ranker en iyi 5'e indirir, bunlar kaynak linkleriyle context'e konur.
+
+\smallskip
+\textbf{Sonuç.} Cevaplar her zaman güncel makaleye dayanır ve link verir; içerik
+ekibi makaleyi düzelttiğinde asistan anında doğru cevaba döner --- model
+yeniden eğitilmez. \textbf{Doğruluğun \%80'i retrieval ayarından geldi}, prompt'tan değil.
+\end{prodbox}
+
+% ----------------------------------------------------------------------
+\stage{9}{Anti-pattern}
+% ----------------------------------------------------------------------
+\begin{antibox}[Anti-pattern · ``Çöp at, model halleder'']
+En sık görülen RAG hatası: tüm belgeyi devasa tek bir chunk yapıp ``en yakın 10
+sonucu'' filtresiz context'e doldurmak. Sonuç: alakasız parçalar modeli
+şaşırtır, doğru bilgi context'in ortasında kaybolur (\en{lost in the middle}),
+maliyet ve gecikme artar.
+
+\smallskip
+\textbf{Belirti:} ``Modeli güçlendirdik ama cevaplar kötüleşti.''\\
+\textbf{Kök neden:} retrieval kalitesi ölçülmüyor; chunking ve re-ranking yok.\\
+\textbf{Düzeltme:} retrieval'ı cevaptan \emph{ayrı} değerlendir (\en{recall@k}), chunk boyutunu ayarla, re-ranker ekle.
+\end{antibox}
+
+% ----------------------------------------------------------------------
+\stage{10}{Alternatifler \& Ödünleşimler}
+% ----------------------------------------------------------------------
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{26mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} &
+{\sffamily\bfseries\small Ne zaman güçlü} &
+{\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{RAG} & Bilgi büyük, değişken, kaynak göstermek gerek &
+Retrieval altyapısı + bakım maliyeti \\
+\addlinespace[3pt]
+\textbf{Fine-tuning} & Sabit üslup/format/davranış öğretmek &
+Bilgi tazeliği yok; her güncelleme = yeniden eğitim \\
+\addlinespace[3pt]
+\textbf{Uzun context} & Bilgi küçük ve tek oturumda sığıyor &
+Pahalı, yavaş, \en{lost in the middle} riski \\
+\addlinespace[3pt]
+\textbf{Prompt'a gömme} & Birkaç sabit kural / az sayıda örnek &
+Ölçeklenmez; her değişiklik kod değişikliği \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+Bunlar dışlayıcı değildir: production'da çoğu zaman \textbf{RAG + hafif
+fine-tuning} (üslup için) birlikte kullanılır.
+
+% ----------------------------------------------------------------------
+\stage{11}{İlişkili Kavramlar}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item \term{Embedding} --- metni anlamsal vektöre çevirir; retrieval'ın temel para birimi.
+  \item \term{Chunking} --- belgeyi anlamlı parçalara böler; RAG kalitesini sessizce belirler.
+  \item \term{Vector Database} --- vektörleri saklar ve hızlı benzerlik araması yapar.
+  \item \term{Hybrid Search} --- anlamsal + anahtar kelime aramasını birleştirir.
+  \item \term{Re-ranking} --- aday parçaları alaka düzeyine göre yeniden sıralar.
+  \item \term{Context Window} --- getirilen kanıtın sığması gereken sınır.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{12}{Özet}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item RAG, \emph{bilmek} ile \emph{akıl yürütmeyi} ayırır: bilgi veride, akıl yürütme modelde.
+  \item İki zaman vardır: ingestion (indeksle) ve query (getir + cevapla).
+  \item Kalite modelin zekâsından değil, \textbf{retrieval doğruluğundan} gelir.
+  \item Bilgi sık değişiyor veya büyükse: önce RAG. Fine-tuning üslup içindir.
+  \item Retrieval'ı cevaptan ayrı ölç --- yoksa neyin bozulduğunu göremezsin.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{13}{Mühendislik İlkesi}
+% ----------------------------------------------------------------------
+\begin{principlebox}
+\textbf{İlke \#7 — Retrieval bir model sorunu değil, bir bilgi mimarisi sorunudur.}\\[4pt]
+\normalsize Cevaplar kötüyse, daha büyük model arama; modelin önüne \emph{neyin}
+konduğuna bak. RAG'de doğru sayfayı açmak, sayfayı okuyan zekâdan daha önemlidir.
+\end{principlebox}

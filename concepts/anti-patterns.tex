@@ -1,0 +1,67 @@
+% ======================================================================
+%  PART V İÇERİĞİ: Top 30 Anti-pattern Kataloğu
+% ======================================================================
+
+\concept{Engineering Failures}{Top 30\\Anti-pattern}{Gerçek ekiplerin en sık yaptığı production hataları --- ve hangi ilkeyi çiğnedikleri}
+
+Aşağıdaki katalog, üretimde tekrar tekrar görülen otuz hatayı toplar. Her biri
+bir ilkeyi çiğner; düzeltmesi, çiğnediği ilkedir. Kararlarını Part~IV'teki
+atlasla ver, tuzaklardan bu listeyle kaçın.
+
+% Anti-pattern öğesi: numara + ad + açıklama + ilke
+\newcommand{\anti}[3]{%
+  \par\vspace{2.5pt}\noindent\hangindent=8mm\hangafter=0
+  \makebox[6mm][l]{\sffamily\bfseries\small\color{warn}#1}%
+  \textbf{#2} \,—\, #3\par}
+\newcommand{\antigroup}[1]{%
+  \vspace{7pt}\par\noindent
+  {\sffamily\bfseries\footnotesize\color{accentdk}\MakeUppercase{#1}}\par
+  \vspace{-1pt}\textcolor{hairline}{\rule{\linewidth}{0.6pt}}}
+
+\antigroup{A · Mimari \& Düşünme}
+\anti{1}{AI-First Düşünme}{Her problemi önce AI ile çözmeye çalışmak; regex yeterken LLM çağırmak. {\scriptsize\color{softgray}(İlke \#1)}}
+\anti{2}{Bigger Model Sendromu}{Kaliteyi hep daha büyük modelle çözmeye çalışmak; önce context/prompt/retrieval'a bakmamak. {\scriptsize\color{softgray}(İlke \#17)}}
+\anti{3}{Her Problem Bir Agent}{Deterministik bir workflow yeterken otonom agent kullanmak. {\scriptsize\color{softgray}(İlke \#11)}}
+\anti{4}{Mega-Prompt}{Çok adımlı işi tek dev prompt'a sıkıştırmak; ayrık, test edilebilir adımlara bölmemek. {\scriptsize\color{softgray}(İlke \#12)}}
+\anti{5}{Bugünün Modeline Aşırı Uyum}{Kırılgan, modele özel prompt hileleri; model güncellenince sessizce bozulur. {\scriptsize\color{softgray}(İlke \#25)}}
+\anti{6}{``Bir Kez Çalıştı'' Yanılgısı}{Tek başarılı çalıştırmayı kanıt saymak; dağılıma bakmamak. {\scriptsize\color{softgray}(İlke \#19)}}
+\anti{7}{Çıktıya Körlemesine Güven}{Model çıktısını doğrulamadan, bir sözleşme gibi sisteme akıtmak. {\scriptsize\color{softgray}(İlke \#21)}}
+
+\antigroup{B · Girdi \& Bilgi}
+\anti{8}{Prompt as Business Logic}{Kritik iş mantığını kırılgan düzyazı bir prompt'a gömmek. {\scriptsize\color{softgray}(İlke \#2)}}
+\anti{9}{Infinite Context}{``Pencere büyük, her şeyi koy''; alaka yerine hacim. {\scriptsize\color{softgray}(İlke \#3)}}
+\anti{10}{Versiyonsuz Prompt'lar}{Prompt'ları kod içine dağıtmak; hangi sürümün bu çıktıyı ürettiğini bilememek. {\scriptsize\color{softgray}(İlke \#2)}}
+\anti{11}{Bilgi için Fine-tune}{Gerçekleri ağırlıklara gömmek; güncellenemez, kaynaksız, yine de halüsinasyon. {\scriptsize\color{softgray}(İlke \#5)}}
+\anti{12}{Kötü RAG (``Çöp At'')}{Chunking ve re-ranking olmadan ham, filtresiz retrieval. {\scriptsize\color{softgray}(İlke \#7)}}
+\anti{13}{Karışık Embedding Uzayı}{İndeks ve sorguyu farklı modelle (veya sürümle) embed etmek. {\scriptsize\color{softgray}(İlke \#4)}}
+\anti{14}{Chunk'ı Ayarlamamak}{Devasa veya parçalı chunk; retrieval kalitesini sessizce bozar. {\scriptsize\color{softgray}(İlke \#7)}}
+\anti{15}{Context'i Veritabanı Sanmak}{Tüm bilgiyi pencereye yığıp retrieval'ı atlamak. {\scriptsize\color{softgray}(İlke \#3, \#22)}}
+
+\antigroup{C · Eylem \& Orkestrasyon}
+\anti{16}{50 Araç + Muğlak Açıklama}{Çok, örtüşen, belirsiz tanımlı araç; model yanlış seçer veya hiç çağırmaz. {\scriptsize\color{softgray}(İlke \#6)}}
+\anti{17}{Her Şeye MCP}{Tek, basit bir aracı gereksiz yere koca bir sunucuya dönüştürmek. {\scriptsize\color{softgray}(İlke \#8)}}
+\anti{18}{Açık MCP Sunucusu}{Yetki ve sandbox olmadan sunucu açıp modele sınırsız erişim vermek. {\scriptsize\color{softgray}(İlke \#8, \#15)}}
+\anti{19}{Aşırı Düşünme}{Basit göreve CoT/reflection eklemek; boşa token ve gecikme. {\scriptsize\color{softgray}(İlke \#10)}}
+\anti{20}{Sonsuz Agent Döngüsü}{Bütçe, adım sayısı ve durdurma koşulu olmayan agent. {\scriptsize\color{softgray}(İlke \#11)}}
+\anti{21}{Fallback Yok}{Model veya araç hata verdiğinde geri dönüş planının olmaması. {\scriptsize\color{softgray}(İlke \#20)}}
+
+\antigroup{D · Bellek}
+\anti{22}{Memory Abuse}{Her şeyi saklayıp her turda devasa anı enjekte etmek; hiç unutmamak. {\scriptsize\color{softgray}(İlke \#9)}}
+\anti{23}{Tüm Geçmişi Context'e Yığmak}{``Memory'' diye tüm sohbet kaydını pencereye koymak. {\scriptsize\color{softgray}(İlke \#9)}}
+
+\antigroup{E · Production: Ölçme \& Güvenlik}
+\anti{24}{Deployment'tan Sonra Eval}{Sezgiyle yayınlamak; gerilemeleri kullanıcı şikâyetinden öğrenmek. {\scriptsize\color{softgray}(İlke \#13)}}
+\anti{25}{Tek Sayı Tuzağı}{Tek toplam metriğe bakıp vaka bazlı gerilemeleri kaçırmak. {\scriptsize\color{softgray}(İlke \#13)}}
+\anti{26}{Eval'i Eğitim Verisinde Yapmak}{Sızıntı: skor şişer ama production'da çöker. {\scriptsize\color{softgray}(İlke \#13)}}
+\anti{27}{Yalnız Çıktıyı Logla}{Ara adımları yakalamamak; production hatası teşhis edilemez olur. {\scriptsize\color{softgray}(İlke \#14)}}
+\anti{28}{Maliyeti Umursamamak}{Fatura patlayana dek cost tracking olmaması. {\scriptsize\color{softgray}(İlke \#20)}}
+\anti{29}{Prompt Tabanlı Güvenlik}{``Asla ifşa etme'' yazıp tek savunma sanmak; injection bunu aşar. {\scriptsize\color{softgray}(İlke \#15)}}
+\anti{30}{İnsan Yükseltme Yok}{Yüksek riskli kararı modele tek başına bırakmak. {\scriptsize\color{softgray}(İlke \#23)}}
+
+\vspace{8pt}
+\begin{principlebox}
+\textbf{Kalıbı gör:} Otuz hatanın neredeyse tamamı tek bir kök hatadan türer ---
+\emph{olasılıksal bir aracı, deterministik bir araç gibi kullanmak}. İster ölçmeyi
+atla, ister güvenliği prompt'a yaz, ister her şeyi context'e yığ: hepsi modele
+hak etmediği bir kesinlik atfeder.
+\end{principlebox}

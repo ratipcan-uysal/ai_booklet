@@ -1,0 +1,69 @@
+% ======================================================================
+%  APPENDIX D: Engineering Principles Poster — tek sayfa
+% ======================================================================
+\clearpage
+\thispagestyle{empty}
+\markboth{Engineering Principles Poster}{Engineering Principles Poster}
+\addcontentsline{toc}{chapter}{Appendix D · Principles Poster}
+
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[accentdk] (current page.north west) rectangle
+    ([yshift=-38mm]current page.north east);
+  \node[anchor=north west, text=white, font=\sffamily\bfseries, inner sep=0pt]
+    at ([shift={(19mm,-15mm)}]current page.north west)
+    {\fontsize{12}{14}\selectfont 25 ENGINEERING PRINCIPLES};
+  \node[anchor=north west, text=white, font=\sffamily\bfseries, inner sep=0pt]
+    at ([shift={(19mm,-22mm)}]current page.north west)
+    {\fontsize{22}{26}\selectfont Concepts That Matter};
+  \node[anchor=south east, text=softgray, font=\sffamily\scriptsize, inner sep=0pt]
+    at ([shift={(-17mm,16mm)}]current page.south east)
+    {Araçlar eskir · ilkeler kalır};
+\end{tikzpicture}
+
+\vspace*{32mm}
+
+% poster ilke öğesi: numara dairesi + kısa ifade
+\newcommand{\pp}[2]{%
+  \par\vspace{4.5pt}\noindent\hangindent=8mm\hangafter=0
+  \makebox[7mm][l]{\tikz[baseline=-0.6ex]\node[fill=accent, text=white, circle,
+    inner sep=0pt, minimum size=5mm, font=\sffamily\bfseries\scriptsize]{#1};}%
+  \small #2\par}
+
+\noindent
+\begin{minipage}[t]{0.47\linewidth}
+\pp{1}{AI'ı programlamazsın; brief verir, kısıtlar, ölçersin.}
+\pp{2}{Prompt koddur: versiyonla ve test et.}
+\pp{3}{Context bir bütçedir; her token bir tercih.}
+\pp{4}{Anlamı, anlamı temsil eden uzayda ara.}
+\pp{5}{Fine-tuning davranış içindir, bilgi için değil.}
+\pp{6}{Modelin işi karar; eylemi koda yaptır.}
+\pp{7}{Retrieval bir bilgi mimarisi sorunudur.}
+\pp{8}{Bir kez yaz, her yerde kullan; sınırı sunucuda.}
+\pp{9}{Hatırlama, doğru anda geri getirmektir.}
+\pp{10}{Düşünmenin bedeli var; zorlukla orantılı öde.}
+\pp{11}{Kontrol edebildiğin her şeyi workflow yap.}
+\pp{12}{Adımları biliyorsan onları sen yaz.}
+\pp{13}{Ölçemediğin kaliteyi iyileştiremezsin.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.47\linewidth}
+\pp{14}{Göremediğin sistemi yönetemezsin.}
+\pp{15}{Güvenliği prompt'a yazma; korkuluk kur.}
+\pp{16}{En basitle başla; karmaşıklığı kanıt eklesin.}
+\pp{17}{Daha büyük model çoğu sorunun cevabı değil.}
+\pp{18}{Her başarısızlık yarının eval örneğidir.}
+\pp{19}{``Bir kez çalıştı'' kanıt değildir.}
+\pp{20}{Maliyet ve gecikme birer özelliktir.}
+\pp{21}{Çıktıya körlemesine güvenme; doğrula.}
+\pp{22}{Çoğu kalite sorunu bir girdi sorunudur.}
+\pp{23}{Yüksek riskli kararda insanı döngüde tut.}
+\pp{24}{Yapı sürprizi azaltır; yapılandır.}
+\pp{25}{Bugünün modeline değil, değişime tasarla.}
+\end{minipage}
+
+\vfill
+\begin{center}
+\textcolor{accent}{\rule{30mm}{2pt}}\\[4pt]
+{\sffamily\bfseries\small\color{accentdk}AI Engineering: Concepts That Matter}\\[1pt]
+{\color{softgray}\itshape\footnotesize Kavramları değil, arkalarındaki düşünme biçimini öğren.}
+\end{center}
+\vspace{6mm}

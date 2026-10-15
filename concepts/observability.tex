@@ -1,0 +1,137 @@
+% ======================================================================
+%  KAVRAM: Observability  (Tier 1)  — kompakt
+% ======================================================================
+
+\concept{Production · Üretim}{Observability}{Göremediğin sistemi yönetememek: her çağrıyı izlenebilir kılmak}
+
+\stage{1}{Problem}
+Sistemin canlı. Bir kullanıcı kötü bir cevap bildiriyor. Elinde... hiçbir şey
+yok. Hangi context girdi, hangi araçlar çağrıldı, modelin önüne ne kondu ---
+hiçbiri kayıtlı değil. Ne tekrar üretebiliyor ne teşhis edebiliyorsun. Sistem
+bir kara kutu.
+
+\keyline{Olasılıksal ve çok adımlı bir sistemde, ne olduğunu \emph{tam olarak} görebilmek bir lüks değil, ön koşuldur.}
+
+\stage{2}{Neden Var}
+Production AI hem deterministik değildir hem çok adımlıdır; bir şey ters
+gittiğinde tam olarak ne olduğunu görebilmen şarttır. Observability her çağrının
+girdisini, adımlarını, çıktısını, maliyetini ve gecikmesini yakalar --- böylece
+hata ayıklar, izler ve iyileştirirsin.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2020} \texttt{print} / düz log \tlsep \yr{2022} yapılandırılmış loglama \tlsep \yr{2023} tracing (span'ler): LLM zincirleri \tlsep \yr{2024–26} tam LLM observability: trace + maliyet + eval entegrasyonu
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Observability:} AI sisteminin gerçekte ne yaptığını yakalayıp görünür
+kılma: \textbf{trace} (tüm adım dizisi), \textbf{telemetry} (gecikme, maliyet,
+token), \textbf{loglar} ve \textbf{prompt sürümleri} --- hata ayıklamak, izlemek
+ve iyileştirmek için.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Observability, uçağın \textbf{kara kutusu + gösterge paneli}dir. Her olayı
+önleyemezsin --- ama ne olduğunu tam olarak \emph{yeniden oynatabilmen} gerekir.
+Onsuz her production hatası bir hayalet hikâyesidir: duyulur ama görülemez,
+tekrar üretilemez.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Bir isteğin trace'i: iç içe span'ler, her birinde maliyet ve gecikme.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize,
+   root/.style={draw=accentdk, fill=accent!12, rounded corners=2pt, anchor=north west,
+                minimum height=6mm, text width=78mm, inner xsep=5pt, align=left},
+   span/.style={draw=accent, fill=wash, rounded corners=2pt, anchor=north west,
+                minimum height=5.5mm, text width=64mm, inner xsep=5pt, align=left}]
+  \node[root] (r)  at (0,0)        {\textbf{İstek}\hfill{\tiny\color{softgray} toplam · 1.2s · \$0.004}};
+  \node[span] (s1) at (10mm,-8mm)  {retrieve\hfill{\tiny\color{softgray} 0.3s · 5 chunk}};
+  \node[span] (s2) at (10mm,-15mm) {LLM çağrısı\hfill{\tiny\color{softgray} 0.5s · 1.2k tok}};
+  \node[span] (s3) at (10mm,-22mm) {tool: get\_order\hfill{\tiny\color{softgray} 0.2s}};
+  \node[span] (s4) at (10mm,-29mm) {LLM çağrısı (final)\hfill{\tiny\color{softgray} 0.2s · 0.4k tok}};
+  \draw[hairline, line width=0.7pt] (5mm,-6mm) -- (5mm,-32mm);
+\end{tikzpicture}
+\end{center}
+\keyline{Sadece son çıktıyı loglamak yetmez. Kötü cevabın kök nedeni genelde bir \emph{ara} span'dedir (yanlış retrieve gibi).}
+
+\stage{7}{Karar Çerçevesi}
+Ne yakalanmalı, neye alarm kurulmalı?\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{42mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Her zaman yakala} & {\sffamily\bfseries\small Alarm kur} \\
+\midrule
+Girdi + context (tam) & Maliyet sıçraması \\
+Her araç çağrısı + sonucu & Gecikme artışı \\
+Maliyet · gecikme · token & Hata oranı \\
+Prompt sürümü & Eval skoru düşüşü \\
+\bottomrule
+\end{tabularx}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Hayaleti Yakalamak]
+\textbf{Bağlam.} Kullanıcı ``bana yanlış siparişi gösterdi'' diyor. Ekip tekrar
+üretemiyor --- elde yalnızca nihai cevap var, ara adımlar yok.
+
+\smallskip
+\textbf{Çözüm.} Uçtan uca tracing eklenir: retrieve, model çağrıları, araç
+çağrıları --- hepsi girdi/çıktı/maliyetle kaydedilir. Aynı istek trace'inde
+\emph{retrieve'in yanlış chunk getirdiği} görülür.
+
+\smallskip
+\textbf{Sonuç.} Hayalet, somut bir buga dönüşür ve düzeltilir. Üstelik maliyet
+takibi, fark edilmeyen bir token sızıntısını da ortaya çıkarır.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Yalnız Çıktıyı Logla'']
+Ara adımlar hakkında hiçbir şey yakalamamak --- yalnızca nihai cevabı loglamak.
+Böylece production hataları teşhis edilemez. Ya da maliyet takibi olmaması
+(fatura patlayana dek), veya prompt sürümlemesi olmaması (hangi prompt bu çıktıyı
+üretti, bilinmiyor).
+
+\smallskip
+\textbf{Belirti:} ``Kötü cevabı tekrar üretemiyoruz / faturanın neden arttığını bilmiyoruz.''\\
+\textbf{Kök neden:} Ara adımlar, maliyet ve sürümler görünür değil.\\
+\textbf{Düzeltme:} Uçtan uca trace, span başına maliyet/gecikme, prompt sürümleme.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Seviye} & {\sffamily\bfseries\small Verir} & {\sffamily\bfseries\small Eksik} \\
+\midrule
+\textbf{Hiçbir şey} & --- & Kör uçuş \\
+\addlinespace[2pt]
+\textbf{Yalnız loglar} & Kaba ipuçları & Adım zinciri yok \\
+\addlinespace[2pt]
+\textbf{Tam tracing} & Adım adım yeniden oynatma & Kurulum + saklama \\
+\addlinespace[2pt]
+\textbf{Tracing + eval} & Hata ayıklama + kalite trendi & En çok yatırım \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{Tracing} (adım dizisi) \tlsep \term{Telemetry} (gecikme/maliyet/token) \tlsep
+\term{Cost Tracking} \tlsep \term{Prompt Versioning} \tlsep \term{Eval} (kalite trendi)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Production AI bir kara kutu olmamalı: ne yaptığını görebilmelisin.
+  \item Yakala: girdi+context, her araç çağrısı, maliyet/gecikme/token, prompt sürümü.
+  \item Kök neden genelde nihai çıktıda değil, bir ara span'dedir.
+  \item Yalnız çıktıyı loglamak, hatayı teşhis edilemez kılar.
+  \item Maliyet ve sürüm takibi olmadan sürprizler kaçınılmazdır.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#14 — Göremediğin sistemi yönetemezsin.}\\[4pt]
+\normalsize Her çağrıyı izlenebilir kıl. Bir production hatası, yeniden
+oynatabildiğin anda bir hayalet olmaktan çıkar.
+\end{principlebox}

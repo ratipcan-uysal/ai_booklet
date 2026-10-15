@@ -1,0 +1,22 @@
+% ======================================================================
+%  TIER 2 KARTLARI: Eval altyapısı & Güvenilirlik
+% ======================================================================
+
+\card{Benchmark · Golden Dataset · Judge · Rubric}{değerlendirme altyapısı}
+\cl{Problem} Eval yapacaksın --- ama neye karşı, hangi örneklerle, nasıl puanlayacaksın?
+\cl{Tanım} \term{Golden dataset} temsili test örnekleri; \term{Benchmark} ortak
+ölçüt; \term{Judge model} otomatik puanlayan LLM; \term{Rubric} judge'ın kriterleri.
+\cl{Model} Bir sınav: golden dataset sorular, rubric cevap anahtarı, judge öğretmen.
+\cl{Ne zaman} Her ciddi eval kurulumunda; öznel kalitede judge + rubric birlikte.
+\cl{Tuzak} Golden dataset'i eğitim verisiyle karıştırmak (sızıntı); kalibre edilmemiş judge'a güvenmek.
+\cl{İlişkili} \term{Eval} · \term{Regression} \,{\scriptsize\color{softgray}(İlke \#13)}
+
+\card{Regression · Continuous Eval · Canary · Shadow}{güvenilirlik}
+\cl{Problem} Bir değişiklik bazı vakaları sessizce bozabilir; production'a güvenle nasıl alırsın?
+\cl{Tanım} \term{Regression} eski geçen bir vakanın bozulması; \term{Continuous
+eval} her değişikliği otomatik ölçme; \term{Canary} küçük trafikte deneme;
+\term{Shadow testing} canlıya paralel, görünmez çalıştırma.
+\cl{Model} Yeni pilotu önce simülatörde (eval), sonra boş uçuşta (shadow), sonra az yolcuyla (canary) dene.
+\cl{Ne zaman} Production AI'ı güvenle güncellemek için --- her sürümde.
+\cl{Tuzak} Bir değişikliği tek seferde tüm trafiğe açmak; regression'ı izlememek.
+\cl{İlişkili} \term{Eval} · \term{Observability} \,{\scriptsize\color{softgray}(İlke \#13, \#18)}

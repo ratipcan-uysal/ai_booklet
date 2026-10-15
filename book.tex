@@ -1,0 +1,201 @@
+\documentclass[11pt]{book}
+\usepackage{aibook}
+
+\begin{document}
+\frontmatter
+
+% ======================================================================
+%  KAPAK
+% ======================================================================
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture, overlay]
+  % --- üst ince vurgu şeridi ---
+  \fill[accent] (current page.north west) rectangle
+    ([yshift=-4mm]current page.north east);
+
+  % --- katmanlı "AI Stack" motifi (alt-orta band) ---
+  \foreach \y/\w/\c in {%
+      48/52/accent!16, 61/66/accent!26, 74/80/accent!40,
+      87/92/accentdk, 100/74/accent!46, 113/60/accent!28, 126/46/accent!16} {
+    \node[fill=\c, rounded corners=3.5pt, minimum width=\w mm, minimum height=9mm,
+          anchor=center] at ([yshift=\y mm]current page.south) {};
+  }
+  % motifi delip geçen ince dikey "akış" çizgisi + düğümler
+  \draw[white, line width=1pt]
+    ([yshift=43mm]current page.south) -- ([yshift=131mm]current page.south);
+  \foreach \y in {48,61,74,87,100,113,126}
+    \fill[white] ([yshift=\y mm]current page.south) circle (1.4pt);
+
+  % --- alt köşe sayfa künyesi ---
+  \node[anchor=south west, text=softgray, font=\sffamily\scriptsize, align=left]
+    at ([shift={(19mm,16mm)}]current page.south west)
+    {Product \& AI Engineers · Solution Architects · Technical Founders};
+\end{tikzpicture}
+
+\vspace*{30mm}
+\noindent\concepttag{Pratik Saha Rehberi}\par
+\vspace{8pt}
+{\sffamily\bfseries\fontsize{38}{42}\selectfont AI Engineering\par}
+\vspace{2pt}
+{\sffamily\bfseries\fontsize{38}{42}\selectfont\color{accent}Concepts That Matter\par}
+\vspace{14pt}
+{\large\color{softgray}\itshape Production AI sistemleri kurmak,
+analiz etmek ve doğru teknik kararları\\ tartışabilmek için zihinsel modeller}\par
+
+% ======================================================================
+%  KÜNYE (kolofon) — kapağın arka yüzü
+% ======================================================================
+\clearpage
+\thispagestyle{empty}
+\vspace*{\fill}
+{\sffamily\footnotesize\color{softgray}%
+\textbf{AI Engineering: Concepts That Matter}\\[2pt]
+Sürüm 1.0 · 2026\\[6pt]
+Hedef okur: teknik product manager, AI/yazılım mühendisi, solution architect,
+technical founder.\\[6pt]
+Bu kitap belirli bir araç veya framework öğretmez; AI sistemlerini analiz edip
+tasarlayacak zihinsel modeli kazandırır. Araçlar ve modeller hızla değişir ---
+güncel kalmak için sağlayıcı mühendislik bloglarını takip et, kavramları değil
+düşünme biçimini öğren. \emph{(İlke \#25)}\\[6pt]
+XeLaTeX (tectonic) ile üretildi.\par}
+\clearpage
+
+% ======================================================================
+%  İÇİNDEKİLER
+% ======================================================================
+\tableofcontents
+
+% ======================================================================
+%  BU KİTAP NASIL OKUNMALI?
+% ======================================================================
+\clearpage
+\markboth{Bu Kitap Nasıl Okunmalı?}{Bu Kitap Nasıl Okunmalı?}
+\noindent\concepttag{Önsöz}\par
+\vspace{4pt}
+{\sffamily\bfseries\fontsize{26}{30}\selectfont Bu Kitap Nasıl Okunmalı?\par}
+\vspace{2pt}\textcolor{accent}{\rule{40mm}{2.2pt}}\par
+\vspace{10pt}
+
+Bu kitap bir kullanım kılavuzu değildir.
+
+\begin{itemize}
+  \item[\textcolor{warn}{\ding{55}}] ChatGPT kullanmayı öğretmez.
+  \item[\textcolor{warn}{\ding{55}}] Belirli bir framework öğretmez.
+  \item[\textcolor{good}{\ding{51}}] AI sistemlerini \emph{nasıl düşüneceğini} öğretir.
+\end{itemize}
+
+Her kavram bir \textbf{probleme cevap olarak} doğar. ``Nedir?'' kadar
+``\emph{ne zaman kullanılmalı?}'' sorusunu da yanıtlar. En önemli kavramlar
+13-aşamalı tam yapıyla derinlemesine; destekleyici kavramlar kısa kartlarla;
+geri kalanı Glossary'de ele alınır.
+
+\keyline{Hedef: 250 terim ezberletmek değil — AI sistemlerini tasarlayıp savunabileceğin bir zihinsel model kazandırmak.}
+
+\vspace{6pt}
+\begin{principlebox}
+\textbf{Çekirdek fikir:} AI'ı \emph{programlamazsın}; ona iyi bir brief verir,
+çıktısını kısıtlar, dağılımını ölçer ve etrafına korkuluklar kurarsın. Kitabın
+25 ilkesinin tamamı --- Part~I'de bir arada --- bunun bir sonucudur.
+\end{principlebox}
+
+% ======================================================================
+%  ANA METİN
+% ======================================================================
+\mainmatter
+
+% ---------------------------------------------------------------- PART I
+\bookpart{I}{Think Like an AI Engineer}
+  {AI geleneksel yazılım değildir. Bu bölüm kitabın temelini kurar.}
+  {3 bölüm · ~10 sayfa}
+\input{concepts/ai-vs-software.tex}   % ✅ YAZILDI (Tier 1)
+\input{concepts/ai-stack.tex}         % ✅ YAZILDI (poster)
+\input{concepts/t2-model.tex}         % ✅ Tier 2: Model seçimi · Multimodal
+\input{concepts/principles.tex}       % ✅ YAZILDI (25 ilke)
+
+% --------------------------------------------------------------- PART II
+\bookpart{II}{Building an AI System}
+  {Bir AI sisteminin altı katmanı: kullanıcı, bağlam, bilgi, eylem, bellek, akıl yürütme.}
+  {Tier 1 derin + Tier 2 standart kavramlar · ~45 sayfa}
+
+% Understanding Users
+\input{concepts/prompt.tex}         % ✅ YAZILDI (Tier 1)
+\input{concepts/t2-users.tex}       % ✅ Tier 2: Intent, Conversation & Persona
+
+% Context Engineering
+\input{concepts/context-engineering.tex}  % ✅ YAZILDI (Tier 1)
+
+% Knowledge
+\input{concepts/embedding.tex}      % ✅ YAZILDI (Tier 1)
+\input{concepts/rag.tex}            % ✅ YAZILDI
+\input{concepts/t2-rag-support.tex} % ✅ Tier 2: Chunking, Vector DB, Hybrid Search
+\input{concepts/fine-tuning.tex}    % ✅ YAZILDI (Tier 1)
+
+% Actions
+\input{concepts/tool-calling.tex}   % ✅ YAZILDI (Tier 1)
+\input{concepts/mcp.tex}            % ✅ YAZILDI (Tier 1)
+\input{concepts/t2-skill.tex}       % ✅ Tier 2: Skill (Agent Skills)
+\input{concepts/t2-api.tex}         % ✅ Tier 2: API & Authorization
+
+% Memory
+\input{concepts/memory.tex}         % ✅ YAZILDI (Tier 1)
+
+% Reasoning
+\input{concepts/reasoning.tex}      % ✅ YAZILDI (Tier 1)
+\input{concepts/t2-reasoning-models.tex} % ✅ Tier 2: Reasoning Models
+\input{concepts/agent.tex}          % ✅ YAZILDI (Tier 1)
+\input{concepts/workflow.tex}       % ✅ YAZILDI (Tier 1)
+\input{concepts/t2-orchestration.tex} % ✅ Tier 2: Router · Subagent · Multi-Agent
+
+% -------------------------------------------------------------- PART III
+\bookpart{III}{Making AI Production Ready}
+  {Bir prototipi güvenilir bir ürüne çeviren her şey: değerlendirme, gözlemlenebilirlik, güvenlik.}
+  {~18 sayfa}
+\input{concepts/eval.tex}           % ✅ YAZILDI (Tier 1)
+\input{concepts/t2-production.tex}  % ✅ Tier 2: Eval altyapısı, Güvenilirlik
+\input{concepts/t2-eval-online.tex} % ✅ Tier 2: Offline vs Online Eval
+\input{concepts/observability.tex}  % ✅ YAZILDI (Tier 1)
+\input{concepts/t2-cost.tex}        % ✅ Tier 2: Maliyet & Gecikme
+\input{concepts/guardrails.tex}     % ✅ YAZILDI (Tier 1)
+\input{concepts/t2-data.tex}        % ✅ Tier 2: Veri & Gizlilik
+
+% --------------------------------------------------------------- PART IV
+\bookpart{IV}{Engineering Decisions}
+  {Mimari kararları tek referansta toplayan karar atlası --- ve onu gerçek bir sisteme uygulayan uçtan uca vaka.}
+  {Karar Atlası + Capstone}
+\input{concepts/decisions.tex}      % ✅ YAZILDI (Part IV içeriği)
+\input{concepts/capstone.tex}       % ✅ YAZILDI (Capstone vaka)
+
+% ---------------------------------------------------------------- PART V
+\bookpart{V}{Engineering Failures}
+  {Gerçek ekiplerin en sık yaptığı 30 production hatası --- her biri çiğnediği ilkeyle.}
+  {Top 30 Anti-pattern}
+\input{concepts/anti-patterns.tex}  % ✅ YAZILDI (Part V içeriği)
+
+% --------------------------------------------------------------- PART VI
+\bookpart{VI}{Modern AI Ecosystem}
+  {Tüm ekosistemi tek zihinsel model altında birleştiren harita.}
+  {~4 sayfa}
+\input{concepts/ai-atlas.tex}       % ✅ YAZILDI (Part VI içeriği)
+
+% -------------------------------------------------------------- PART VII
+\bookpart{VII}{AI Engineering Playbook}
+  {En pratik kısım: ``AI halüsinasyon yapıyor / pahalı / yavaş / unutuyor'' → ne kontrol edilir?}
+  {~5 sayfa}
+\input{concepts/playbook.tex}       % ✅ YAZILDI (Part VII içeriği)
+\input{concepts/building-blocks.tex} % ✅ Yapı Taşları başvuru tablosu
+
+% ======================================================================
+%  APPENDIX
+% ======================================================================
+\appendix
+\bookpart{}{Appendix}
+  {Glossary · Timeline · Reading List · Engineering Principles Poster}
+  {~8 sayfa}
+
+\input{concepts/glossary.tex}       % Appendix A
+\input{concepts/timeline.tex}       % Appendix B
+\input{concepts/reading-list.tex}   % Appendix C
+\input{concepts/principles-poster.tex} % Appendix D
+\input{concepts/index.tex}          % Appendix E (index en sonda — gelenek)
+
+\end{document}

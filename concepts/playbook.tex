@@ -1,0 +1,63 @@
+% ======================================================================
+%  PART VII İÇERİĞİ: AI Engineering Playbook — troubleshooting
+% ======================================================================
+
+\concept{AI Engineering Playbook}{Playbook}{Belirti → ne kontrol edilir: production'da en sık altı sorun}
+
+Kitabın en pratik kısmı. Bir AI sistemi production'da bozulduğunda panik yapma ---
+belirtiye göre sırayla kontrol et. Her madde, geri dönüp okuyacağın kavramı işaret eder.
+
+% Belirti kartı başlığı
+\newcommand{\symptom}[1]{%
+  \vspace{7pt}\par\noindent
+  {\sffamily\bfseries\small\color{warn}▸ }{\sffamily\bfseries\small\color{ink}#1}%
+  \hspace{4pt}\textcolor{hairline}{\leaders\hrule height 0.4pt\hfill}\par
+  \vspace{1pt}}
+% Kontrol maddesi (numaralı)
+\newcommand{\chk}[2]{%
+  \par\vspace{1.5pt}\noindent\hangindent=7mm\hangafter=0
+  \makebox[6mm][l]{\sffamily\bfseries\footnotesize\color{accent}#1}%
+  #2\par}
+
+\symptom{AI halüsinasyon yapıyor}
+\chk{1}{Retrieval doğru kanıtı getiriyor mu? Context'te dayanak var mı, yoksa model boşluğu mu dolduruyor? \,{\scriptsize\color{softgray}→ RAG}}
+\chk{2}{Cevap bir kaynağa bağlanıyor mu (grounding/citation)? \,{\scriptsize\color{softgray}→ RAG}}
+\chk{3}{Chunk boyutu ve re-ranking ayarlı mı; doğru parça gerçekten geliyor mu? \,{\scriptsize\color{softgray}→ Embedding, RAG}}
+\chk{4}{Bir çıktı guardrail'i dayanaksız iddiaları süzüyor mu? \,{\scriptsize\color{softgray}→ Guardrails}}
+
+\symptom{AI pahalı}
+\chk{1}{Gereksiz büyük bir model mi kullanılıyor? Daha küçüğü yeter mi? \,{\scriptsize\color{softgray}→ İlke \#17}}
+\chk{2}{Context şişkin mi --- kullanılmayan bağlam pencereye yığılıyor mu? \,{\scriptsize\color{softgray}→ Context Engineering}}
+\chk{3}{Basit görevlere gereksiz reasoning (CoT/reflection) ekleniyor mu? \,{\scriptsize\color{softgray}→ Reasoning}}
+\chk{4}{Tekrar eden çağrılar cache'leniyor mu? Agent gereksiz döngüde mi? \,{\scriptsize\color{softgray}→ İlke \#20}}
+
+\symptom{AI yavaş}
+\chk{1}{Context boyutu büyük mü? Küçült, özetle, retrieve et. \,{\scriptsize\color{softgray}→ Context Engineering}}
+\chk{2}{Model gereğinden büyük mü? Gecikme bir özelliktir. \,{\scriptsize\color{softgray}→ İlke \#20}}
+\chk{3}{Yanıt streaming yerine tek seferde mi bekletiliyor? \,{\scriptsize\color{softgray}→ Deployment}}
+\chk{4}{Workflow yeterken agent mı koştu (öngörülemez adım sayısı)? \,{\scriptsize\color{softgray}→ Agent, Workflow}}
+
+\symptom{AI unutuyor}
+\chk{1}{Bir memory katmanı var mı, yoksa her tur sıfırdan mı başlıyor? \,{\scriptsize\color{softgray}→ Memory}}
+\chk{2}{İlgili anılar context'e geri getiriliyor mu (yoksa hiç yazılmıyor mu)? \,{\scriptsize\color{softgray}→ Memory}}
+\chk{3}{Kalıcı gerçekler (tercih, isim) semantic memory'ye yazılıyor mu? \,{\scriptsize\color{softgray}→ Memory}}
+\chk{4}{Kural ``unutuluyorsa'', context'in ortasında mı kalıyor (lost in the middle)? \,{\scriptsize\color{softgray}→ Context Engineering}}
+
+\symptom{AI tool çağırmıyor (veya yanlış çağırıyor)}
+\chk{1}{Araç açıklaması ve parametre şeması net mi? \,{\scriptsize\color{softgray}→ Tool Calling}}
+\chk{2}{Çok fazla, örtüşen araç mı var? Sayıyı azalt, her birini tek işe indir. \,{\scriptsize\color{softgray}→ Tool Calling}}
+\chk{3}{Modelin aracı seçmesi için yeterli bağlam/örnek var mı? \,{\scriptsize\color{softgray}→ Prompt}}
+\chk{4}{Çağrı sonucu doğrulanıp modele geri veriliyor mu? \,{\scriptsize\color{softgray}→ Tool Calling}}
+
+\symptom{AI production'da bozuldu}
+\chk{1}{Son değişiklik ne? Hangi prompt sürümü canlıda (versiyonlama)? \,{\scriptsize\color{softgray}→ Observability}}
+\chk{2}{Trace'e bak: hangi ara adım (retrieve, tool, model) hatalı? \,{\scriptsize\color{softgray}→ Observability}}
+\chk{3}{Bu değişiklik bir eval gate'inden geçti mi? \,{\scriptsize\color{softgray}→ Eval}}
+\chk{4}{Hızlı rollback ve bir fallback var mı? \,{\scriptsize\color{softgray}→ İlke \#20}}
+
+\vspace{8pt}
+\begin{principlebox}
+\textbf{Playbook'un özü:} Önce \emph{gör} (observability), sonra \emph{ölç} (eval),
+sonra \emph{düzelt}. Belirtiyi değil kök nedeni ara --- ve kök neden neredeyse her
+zaman bir üst katmanda, atladığın bir kararda yatar.
+\end{principlebox}

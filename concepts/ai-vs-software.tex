@@ -1,0 +1,265 @@
+% ======================================================================
+%  KAVRAM: AI ≠ Traditional Software  (Tier 1)
+%  Kitabın açılış kavramı — olasılıksal düşünmenin zemini
+% ======================================================================
+
+\concept{Temel · Foundations}{AI Geleneksel\\Yazılım Değildir}{Kod kuralları \emph{icra} eder; model bir sonucu \emph{tahmin} eder}
+
+% ----------------------------------------------------------------------
+\stage{1}{Problem}
+% ----------------------------------------------------------------------
+Bir mühendis ilk kez bir LLM özelliği yazdığında, onu eski refleksleriyle
+karşılar: aynı girdiyi iki kez verir, iki \emph{farklı} cevap alır. Dün geçen
+testi bugün kırılır. ``Bug yok ki --- kod aynı'' der ve şaşırır.
+
+\keyline{Sorun kodun bozulması değil. Sorun, deterministik bir araca davranır gibi olasılıksal bir araçla çalışıyor olman.}
+
+Geleneksel yazılımda bir fonksiyon bir \emph{sözleşmedir}: \texttt{topla(2,3)}
+her zaman \texttt{5} döner. LLM ise sözleşme değil, \emph{olasılık} sunar: ``bu
+girdiye en olası devam şudur.'' Bu farkı kavramadan kurulan her sistem,
+güvenilirliği yanlış yerde arar --- daha çok test, daha büyük model, daha katı
+prompt --- ve hiçbiri kök nedeni çözmez.
+
+% ----------------------------------------------------------------------
+\stage{2}{Neden Var}
+% ----------------------------------------------------------------------
+Fark, iki yazılımın \textbf{nasıl üretildiğinden} doğar. Geleneksel kodu bir
+insan \emph{yazar}: davranış, satır satır açıkça programlanır. Bir modeli ise
+kimse yazmaz; model milyonlarca örnekten \emph{istatistiksel olarak eğitilir}.
+Davranışı kurallarda değil, ağırlıklarda --- bir olasılık dağılımında --- saklıdır.
+
+Bu yüzden:
+\begin{itemize}
+  \item Davranışı ``düzeltmek'' bir satırı değiştirmek değil, girdiyi/bağlamı/kısıtı değiştirmektir.
+  \item ``Doğruluk'' ikili (doğru/yanlış) değil, \emph{olasılıksaldır} (genelde doğru).
+  \item Test etmek, tek bir çıktıyı değil, çıktı \emph{dağılımını} doğrulamaktır.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{3}{Tarihçe}
+% ----------------------------------------------------------------------
+\begin{timeline}
+\yr{1960–80} kural tabanlı / uzman sistemler (elle \texttt{if-then}, deterministik) \tlsep \yr{1990–2010} makine öğrenmesi: davranış veriden öğrenilir \tlsep \yr{2012–17} derin öğrenme: özellikler de öğrenilir \tlsep \yr{2018–26} LLM'ler: ``programlama'' → ``yönlendirme'' (prompt + context)
+\end{timeline}
+
+% ----------------------------------------------------------------------
+\stage{4}{Tanım}
+% ----------------------------------------------------------------------
+\begin{problembox}
+\textbf{Deterministik sistem:} Aynı girdi, her zaman aynı çıktıyı verir;
+davranış açıkça programlanmıştır (\emph{execution} --- icra).
+
+\smallskip
+\textbf{Olasılıksal sistem:} Aynı girdi, bir olasılık dağılımından
+\emph{örneklenmiş} çıktılar verir; davranış eğitimle öğrenilmiştir
+(\emph{prediction} --- tahmin).
+\end{problembox}
+
+LLM ikincisidir: her adımda ``bir sonraki en olası token''ı bir dağılımdan seçer.
+\term{temperature} bu seçimin ne kadar çeşitli olacağını ayarlar --- ama sıfırda
+bile model bir \emph{sözleşme} değil, bir \emph{tahmin} üretir.
+
+% ----------------------------------------------------------------------
+\stage{5}{Zihinsel Model}
+% ----------------------------------------------------------------------
+\begin{mentalbox}
+Geleneksel yazılım bir \textbf{otomat} gibidir: B4'e basarsın, her seferinde
+\emph{aynı} cipsi verir. Garanti, mekaniktir.
+
+\smallskip
+AI ise \textbf{çok okumuş, çok hızlı bir stajyer} gibidir: aynı soruyu iki kez
+sorarsan, ikisi de doğru ama \emph{farklı kelimelerle} iki cevap alırsın ---
+ve bazen büyük bir özgüvenle yanlış cevap verir. Onu \emph{programlamazsın};
+ona iyi bir brief verir, işini kontrol eder ve sınırlarını çizersin.
+\end{mentalbox}
+
+Bu model neden önemli: bir stajyerden ``her seferinde birebir aynı paragrafı''
+beklemezsin. Beklersen sorun stajyerde değil, beklentindedir.
+
+% ----------------------------------------------------------------------
+\stage{6}{Kavramsal Diyagram}
+% ----------------------------------------------------------------------
+Aynı girdi, iki farklı dünya. Solda tek ve kesin çıktı; sağda bir dağılımdan
+örneklenen çıktı.
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize,
+   io/.style={draw=softgray, line width=0.7pt, fill=white, rounded corners=8pt,
+              minimum height=8mm, minimum width=20mm, align=center, inner sep=3pt},
+   proc/.style={draw=accent, line width=0.9pt, fill=wash, rounded corners=2pt,
+                minimum height=11mm, minimum width=26mm, align=center},
+   outbox/.style={draw=good, line width=0.9pt, fill=good!10, rounded corners=2pt,
+               minimum height=8mm, minimum width=20mm, align=center},
+   flow/.style={-{Stealth[length=2mm]}, accent, line width=0.8pt}]
+
+  % --- SOL: Geleneksel ---
+  \node[io] (in1) {Girdi};
+  \node[proc, below=5mm of in1] (rule) {Açık kurallar\\\texttt{if / else}};
+  \node[outbox, below=5mm of rule] (o1) {\textbf{Çıktı}\\tek · kesin};
+  \draw[flow] (in1) -- (rule);
+  \draw[flow] (rule) -- (o1);
+  \node[above=2mm of in1, text=ink, font=\sffamily\bfseries]
+        {GELENEKSEL · deterministik};
+
+  % ayraç
+  \draw[hairline, line width=0.8pt, dotted] ($(in1.north)!0.5!(in1.north)+(33mm,4mm)$)
+        -- ++(0,-42mm);
+
+  % --- SAĞ: AI ---
+  \node[io, right=46mm of in1] (in2) {Girdi};
+  \node[proc, below=5mm of in2, draw=accentdk] (dist) {Olasılık\\dağılımı};
+  \draw[flow] (in2) -- (dist);
+  \node[above=2mm of in2, text=ink, font=\sffamily\bfseries]
+        {AI · olasılıksal};
+
+  % dağılım çubukları
+  \begin{scope}[shift={($(dist.south)+(-12mm,-6mm)$)}]
+    \def\bw{3.2mm}
+    \fill[accent]   (0,0)        rectangle ++(\bw,9mm);
+    \fill[accent!55](4.6mm,0)    rectangle ++(\bw,6mm);
+    \fill[accent!35](9.2mm,0)    rectangle ++(\bw,4mm);
+    \fill[accent!22](13.8mm,0)   rectangle ++(\bw,2.5mm);
+    \fill[accent!15](18.4mm,0)   rectangle ++(\bw,1.5mm);
+    \draw[hairline] (-1mm,0) -- (23mm,0);
+    \node[font=\sffamily\tiny, text=softgray, below=0pt] at (11mm,-1mm)
+          {olası çıktılar};
+  \end{scope}
+
+  \node[outbox, below=24mm of dist] (o2) {\textbf{Çıktı}\\örneklenmiş};
+  \draw[flow] ($(dist.south)+(-10.4mm,-6mm)$) .. controls +(0,-5mm) and +(0,5mm) ..
+        node[right=1mm, text=accentdk, font=\sffamily\tiny]{örnekle} (o2.north);
+\end{tikzpicture}
+\end{center}
+
+\keyline{Solda ``test = tek doğru cevabı kontrol et''. Sağda ``test = dağılımın kabul edilebilir olduğunu kontrol et''.}
+
+% ----------------------------------------------------------------------
+\stage{7}{Karar Çerçevesi}
+% ----------------------------------------------------------------------
+``Bu işi AI mı yapsın, geleneksel kod mu?'' Çoğu üretim hatası bu soruyu
+atlamaktan doğar. AI güçlü diye her yere konmaz.
+
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[
+   font=\sffamily\scriptsize, node distance=5mm and 8mm,
+   q/.style={draw=accent, line width=0.8pt, fill=wash, diamond, aspect=2.4,
+             align=center, inner sep=1pt, minimum width=32mm},
+   leaf/.style={draw=accentdk, line width=0.8pt, rounded corners=2pt,
+                fill=accent!12, align=center, inner sep=4pt, minimum width=24mm},
+   codeleaf/.style={draw=softgray, line width=0.8pt, rounded corners=2pt,
+                fill=white, align=center, inner sep=4pt, minimum width=24mm},
+   yes/.style={good, font=\sffamily\bfseries\scriptsize},
+   no/.style={warn, font=\sffamily\bfseries\scriptsize},
+   ed/.style={-{Stealth[length=2mm]}, softgray, line width=0.7pt}]
+
+  % dikey omurga: sorular aşağı iner, yapraklar yana dallanır
+  \node[q] (q1) {Kuralı açıkça\\yazabiliyor musun?};
+  \node[codeleaf, right=13mm of q1] (code1) {\textbf{Geleneksel kod}\\ucuz · kesin};
+  \node[q, below=11mm of q1] (q2) {Girdi muğlak / doğal\\dil / algı mı?};
+  \node[codeleaf, left=13mm of q2] (code2) {\textbf{Kod}\\(belki ML sınıflandırıcı)};
+  \node[q, below=11mm of q2] (q3) {Çıktıdaki değişkenlik\\kabul edilebilir mi?};
+  \node[leaf, below left=12mm and 4mm of q3, minimum width=22mm] (ai) {\textbf{AI}\\+ guardrail + eval};
+  \node[codeleaf, below right=12mm and 4mm of q3, minimum width=22mm] (code3) {\textbf{Kısıtlı AI}\\structured output};
+
+  \draw[ed] (q1) -- node[yes,above,inner sep=1pt]{Evet} (code1);
+  \draw[ed] (q1) -- node[no,right]{Hayır} (q2);
+  \draw[ed] (q2) -- node[no,above,inner sep=1pt]{Hayır} (code2);
+  \draw[ed] (q2) -- node[yes,right]{Evet} (q3);
+  \draw[ed] (q3) -- node[yes,left]{Evet} (ai);
+  \draw[ed] (q3) -- node[no,right]{Hayır} (code3);
+\end{tikzpicture}
+\end{center}
+
+\keyline{Kural: Açıkça yazılabilen hiçbir şeyi modele yaptırma. AI'ı yalnızca muğlaklığın gerçek olduğu yerde kullan.}
+
+% ----------------------------------------------------------------------
+\stage{8}{Üretim Senaryosu}
+% ----------------------------------------------------------------------
+\begin{prodbox}[Üretim Senaryosu · Kırılgan Test]
+\textbf{Bağlam.} Bir ekip, e-postaları özetleyen bir özellik yazar. CI'a klasik
+bir test koyar: \texttt{assert ozet == "Bu hafta 3 toplantı var."}
+
+\smallskip
+\textbf{Sorun.} Test rastgele kırılır. Model bazen ``Bu hafta üç toplantınız
+var.'' der --- anlamca aynı, dizgece farklı. Ekip ``model güvenilmez'' diye
+şikâyet eder.
+
+\smallskip
+\textbf{Çözüm.} Birebir string yerine \emph{özellik} (property) testi: özet 200
+karakterden kısa mı? ``3'' veya ``üç'' geçiyor mu? Bir \term{judge model}
+``orijinali doğru özetliyor mu?'' diye puanlıyor mu? Artık test, tek bir çıktıyı
+değil \textbf{kabul edilebilir dağılımı} doğrular --- ve kırılgan olmaktan çıkar.
+\end{prodbox}
+
+% ----------------------------------------------------------------------
+\stage{9}{Anti-pattern}
+% ----------------------------------------------------------------------
+\begin{antibox}[Anti-pattern · ``AI-First Düşünme'']
+Her problemi önce AI ile çözmeye çalışmak. Bir e-posta adresini doğrulamak için
+LLM çağırmak (regex yeterken), sabit bir hesaplama için modele güvenmek, ya da
+model çıktısını sorgusuz bir \emph{sözleşme} gibi sisteme akıtmak.
+
+\smallskip
+\textbf{Belirti:} Basit, deterministik işler pahalı, yavaş ve ara sıra yanlış.\\
+\textbf{Kök neden:} Olasılıksal aracı, deterministik işe koşmak.\\
+\textbf{Düzeltme:} Önce ``bu kural yazılabilir mi?'' diye sor. Yazılabiliyorsa yaz. AI'ı yalnızca muğlaklık için sakla.
+\end{antibox}
+
+% ----------------------------------------------------------------------
+\stage{10}{Alternatifler \& Ödünleşimler}
+% ----------------------------------------------------------------------
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yaklaşım} &
+{\sffamily\bfseries\small Güçlü olduğu yer} &
+{\sffamily\bfseries\small Ödünleşim} \\
+\midrule
+\textbf{Kural tabanlı kod} & Net, sabit, doğrulanabilir mantık &
+Muğlaklık ve doğal dilde kırılır \\
+\addlinespace[3pt]
+\textbf{ML sınıflandırıcı} & Sabit kategoriler, çok örnek var &
+Eğitim verisi + bakım; esnek değil \\
+\addlinespace[3pt]
+\textbf{LLM} & Açık uçlu dil, muğlaklık, az örnek &
+Olasılıksal; eval ve guardrail şart \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+Pratikte en sağlam sistemler \textbf{hibrittir}: deterministik iskelet (kod) +
+olasılıksal çekirdek (model), arada doğrulama katmanıyla.
+
+% ----------------------------------------------------------------------
+\stage{11}{İlişkili Kavramlar}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item \term{Temperature} --- örneklemedeki çeşitliliği ayarlar; 0 bile determinizm garanti etmez.
+  \item \term{Hallucination} --- olasılıksal doğanın doğrudan sonucu: dayanaksız ama emin çıktı.
+  \item \term{Eval} --- tek çıktı yerine dağılımı ölçmenin yolu.
+  \item \term{Guardrails} --- olasılıksal çıktıyı deterministik sınırlara hapsetme katmanı.
+  \item \term{Structured Output} --- modeli sözleşmeye yaklaştıran kısıtlama.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{12}{Özet}
+% ----------------------------------------------------------------------
+\begin{itemize}
+  \item Geleneksel yazılım \emph{icra eder} (deterministik); AI \emph{tahmin eder} (olasılıksal).
+  \item Fark araçtan değil, üretim biçiminden gelir: kod yazılır, model eğitilir.
+  \item ``Doğruluk'' ikili değil olasılıksaldır; test, çıktıyı değil \textbf{dağılımı} doğrular.
+  \item Açıkça yazılabilen işi modele yaptırma --- AI'ı muğlaklık için sakla.
+  \item En sağlam sistemler hibrittir: deterministik iskelet + olasılıksal çekirdek + doğrulama.
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\stage{13}{Mühendislik İlkesi}
+% ----------------------------------------------------------------------
+\begin{principlebox}
+\textbf{İlke \#1 — AI'ı programlamazsın; ona brief verir, çıktısını kısıtlar ve dağılımını ölçersin.}\\[4pt]
+\normalsize Determinizm beklediğin yerde olasılıksal bir araç kullanma. Model
+bir sözleşme değil bir tahmindir --- sistemini bu gerçeğin üzerine kur, ona rağmen değil.
+\end{principlebox}

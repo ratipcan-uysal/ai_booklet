@@ -1,0 +1,135 @@
+% ======================================================================
+%  PART IV İÇERİĞİ (devam): Capstone — uçtan uca vaka
+% ======================================================================
+
+\concept{Capstone · Vaka}{Bir Destek Asistanını\\Sıfırdan Tasarlamak}{Tüm kavramların ve kararların tek bir gerçek sistemde buluştuğu yer}
+
+Kavramları tek tek öğrendin, kararları bir atlasta gördün. Şimdi hepsini
+\emph{tek bir sistemde} birleştirelim. Bu bölüm bir vaka değil, bir
+\textbf{düşünme kaydı}: her kararın neden öyle verildiğini izle.
+
+\stage{1}{Bağlam \& Gereksinimler}
+Bir B2B SaaS şirketi, müşteri destek asistanı kuruyor. Kısıtlar nettir:
+\begin{itemize}
+  \item 40.000 yardım makalesi; içerik \textbf{haftada onlarca kez} güncelleniyor.
+  \item Asistan cevapları \textbf{kaynak göstermeli}; asla hukuki/finansal tavsiye vermemeli.
+  \item ``Siparişim nerede?'' gibi sorular \textbf{canlı veri} ister.
+  \item Hedef: yanıt $<2$ sn, sorgu başına maliyet düşük, kullanıcıya yanlış/uydurma cevap gitmesin.
+\end{itemize}
+
+\stage{2}{Kararları Sırayla Geçmek}
+Part~IV'teki atlası bu vakaya uyguluyoruz --- yukarıdan aşağı:\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm} >{\raggedright\arraybackslash}p{32mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Karar} & {\sffamily\bfseries\small Seçim} & {\sffamily\bfseries\small Neden} \\
+\midrule
+AI mı, kod mu? & \textbf{AI} + dar kod & Doğal dil muğlak; ama sipariş no çıkarımı koda yakın \\
+Bilgi mi, davranış mı? & \textbf{RAG} (+ hafif fine-tune) & Bilgi sık değişir → RAG; ton tutarlılığı → küçük fine-tune \\
+Agent mı, Workflow mu? & \textbf{Workflow} & Adımlar belli: anla → getir → cevapla → (gerekirse) eskale \\
+Yetenek nasıl? & \textbf{RAG + Tool} & Makaleler RAG; sipariş durumu canlı araç \\
+MCP mi? & \textbf{İç sistemde MCP} & Sipariş/CRM birçok uygulamada kullanılıyor → tekrar kullanım \\
+Reasoning? & \textbf{Direct} (+ CoT) & Çoğu soru tek adımlı; yalnız çok adımlı sorun gidermede CoT \\
+Bellek? & \textbf{Semantic + Episodic} & Tercih/dil semantic; geçmiş talepler episodic \\
+Eval? & \textbf{Golden + judge} & 200 gerçek talep; LLM-judge + grounding kontrolü, gate \\
+Yetkinlik paketle? & \textbf{Skill gerekmez} & Yetenekler basit (RAG + tek araç); skill bu ölçekte fazla \\
+Hangi model? & \textbf{Ekonomik + router} & Çoğu soru küçük modele; yalnız zor vaka frontier'a \\
+\bottomrule
+\end{tabularx}
+\keyline{Dikkat: kararların hiçbiri ``daha iyi model'' değil. Sistemin kalitesi modelden değil, bu on karardan doğuyor.}
+
+\stage{3}{Somut Artefaktlar}
+Kararlar somut nesnelere dönüşür. İşte sistemin dört kritik artefaktı:
+
+\begin{artifact}[System Prompt (taslak)]
+[ROL] Sen bir B2B SaaS destek asistanısın.\\
+{}[KURAL] Yalnızca verilen kaynaklardan cevapla; emin değilsen ``bilmiyorum'' de.\\
+{}[KURAL] Asla hukuki veya finansal tavsiye verme.\\
+{}[FORMAT] En fazla 5 madde. Her iddiayı [kaynak: <link>] ile göster.\\
+{}[TON] Kısa, net, profesyonel.
+\end{artifact}
+
+\begin{artifact}[Tool Schema — canlı veri]
+\{ "name": "get\_order\_status",\\
+\ \ "description": "Bir siparişin güncel durumunu döner.",\\
+\ \ "parameters": \{ "order\_id": \{ "type": "string" \} \},\\
+\ \ "auth": "yalnız çağıran kullanıcının siparişleri" \}
+\end{artifact}
+
+\begin{artifact}[Eval Rubric — judge kriterleri]
+1. Doğruluk --- cevap kaynaklarla tutarlı mı?\ \ (0--2)\\
+2. Grounding --- her iddia bir kaynağa bağlı mı?\ \ (0--2)\\
+3. Kapsam --- soruyu tam yanıtlıyor mu?\ \ (0--2)\\
+4. Güvenlik --- yasak tavsiye / veri sızıntısı yok mu?\ \ (geç/kal)
+\end{artifact}
+
+\begin{artifact}[Trace — bir isteğin gözlemlenebilir hâli]
+İstek ........................ 1.4s · \$0.004\\
+├─ route: bilgi sorusu ........ 2ms\\
+├─ retrieve (5 chunk) ......... 280ms\\
+├─ input guardrail: temiz ..... 5ms\\
+├─ LLM çağrısı ................ 0.9s · 3.3k tok\\
+└─ output guardrail: temiz .... 4ms
+\end{artifact}
+
+\stage{4}{Sayılar \& Mertebeler}
+``Pahalı'' ve ``yavaş'' soyut kalmasın --- büyüklük mertebeleriyle düşün
+\emph{(rakamlar illüstratiftir, modele/sağlayıcıya göre değişir)}:
+
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{42mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Boyut} & {\sffamily\bfseries\small Mertebe} \\
+\midrule
+İndeks & 40k makale × \(\sim\)3 chunk \(\approx\) \textbf{120k vektör} (tek seferlik + günlük delta) \\
+Context bütçesi & system \(\sim\)0.8k + retrieved \(\sim\)2k + geçmiş \(\sim\)0.4k + soru \(\sim\)0.1k \(\approx\) \textbf{3.3k token} \\
+Gecikme & retrieve \(\sim\)0.3s + model \(\sim\)1s \(\approx\) \textbf{1--2s} \\
+Maliyet kaldıracı & Girdi token'ı baskın → system prompt'u kısalt, retrieved'i 5'te tut \\
+\bottomrule
+\end{tabularx}
+\keyline{İçgörü: Sorgu maliyetini en çok düşüren şey daha ucuz model değil, \emph{context'i 3.3k token'da tutmaktır}.}
+
+\stage{5}{Birleşmiş Mimari}
+Tüm parçalar tek bir workflow'da: Router dallandırır, sonuçlar Context Builder'da birleşir.
+\vspace{4pt}
+\begin{center}
+\scalebox{0.92}{%
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=5mm,
+   io/.style={draw=softgray, fill=white, rounded corners=7pt, align=center,
+              minimum height=8mm, minimum width=13mm, inner sep=2pt},
+   box/.style={draw=accent, fill=wash, rounded corners=2pt, align=center,
+               minimum height=8mm, minimum width=14mm, inner sep=1pt},
+   g/.style={draw=warn, fill=warmwash, rounded corners=2pt, align=center,
+             minimum height=8mm, minimum width=13mm, inner sep=1pt},
+   flow/.style={-{Stealth[length=1.8mm]}, accent, line width=0.7pt}]
+  \node[io] (u) {Kullanıcı};
+  \node[box, right=6mm of u] (route) {Router};
+  \node[box, above right=4mm and 7mm of route] (tool) {Tool\\\textcolor{softgray}{sipariş}};
+  \node[box, below right=4mm and 7mm of route] (rag) {RAG\\\textcolor{softgray}{makale}};
+  \node[box, right=26mm of route] (ctx) {Context\\Builder};
+  \node[box, right=5mm of ctx, fill=accentdk, text=white, draw=accentdk] (llm) {LLM};
+  \node[g, right=5mm of llm] (og) {Çıktı\\guard};
+  \node[io, right=5mm of og, fill=good!10, draw=good] (ans) {Cevap\\\textcolor{good}{+kaynak}};
+  \draw[flow] (u)--(route);
+  \draw[flow] (route)-- (tool); \draw[flow] (route)-- (rag);
+  \draw[flow] (tool)-| (ctx); \draw[flow] (rag)-| (ctx);
+  \draw[flow] (ctx)--(llm); \draw[flow] (llm)--(og); \draw[flow] (og)--(ans);
+\end{tikzpicture}}
+\end{center}
+\keyline{Tüm akış Eval (golden gate) ve Observability (trace) ile kuşatılır; girdi tarafında ayrıca bir guardrail katmanı vardır.}
+
+\stage{6}{Kaçınılan Tuzaklar}
+Bu tasarım, Part~V'teki kataloğun en pahalı tuzaklarından bilinçli kaçındı:
+\begin{itemize}
+  \item \emph{Her Problem Bir Agent} değil → öngörülebilir \textbf{workflow}. (Anti-pattern \#3)
+  \item \emph{Bilgi için Fine-tune} değil → bilgi \textbf{RAG}'de, fine-tune yalnız ton. (\#11)
+  \item \emph{Prompt Tabanlı Güvenlik} değil → yetki \textbf{araçta}, çıktı \textbf{guardrail}'de. (\#29)
+  \item \emph{Deployment'tan Sonra Eval} değil → 200 vakalık \textbf{golden gate}. (\#24)
+\end{itemize}
+
+\stage{7}{Çıkarım}
+\begin{principlebox}
+\textbf{Sistem, modelin değil, kararların toplamıdır.} Aynı model, bu on karar
+yanlış verilirse kötü; doğru verilirse güvenilir bir ürün olur. AI mühendisliği
+işte budur: modeli kullanmak değil, onun etrafına \emph{doğru sistemi} kurmak.
+\end{principlebox}

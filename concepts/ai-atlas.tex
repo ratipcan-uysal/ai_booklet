@@ -1,0 +1,57 @@
+% ======================================================================
+%  PART VI İÇERİĞİ: AI Stack Atlas — ekosistem haritası
+% ======================================================================
+
+\concept{Modern AI Ecosystem}{AI Stack Atlas}{Tüm ekosistemi tek zihinsel model altında birleştiren harita}
+
+Araçlar gelir geçer; \emph{katmanlar} kalır. Bu atlas, bir AI ürününün altındaki
+teknoloji yığınını --- uygulamadan altyapıya --- katman katman gösterir. Bir
+aracı değerlendirirken önce ``\textbf{hangi katmanın sorununu çözüyor?}'' diye sor.
+
+\vspace{1pt}
+\begin{center}
+\scalebox{0.78}{%
+\begin{tikzpicture}[font=\sffamily\small,
+  band/.style={draw=accent, line width=0.8pt, fill=wash, rounded corners=2pt,
+               minimum width=78mm, minimum height=11mm, align=center},
+  rail/.style={draw=warn, line width=0.8pt, fill=warmwash, rounded corners=2pt,
+               minimum width=12mm, minimum height=78mm}]
+
+  \node[band, fill=white, draw=softgray] (app)
+    {\textbf{APPLICATION}\\[1pt]{\scriptsize\color{softgray} ürün · kullanıcı deneyimi}};
+  \node[band, below=3.5mm of app] (orch)
+    {\textbf{ORCHESTRATION}\\[1pt]{\scriptsize\color{softgray} agent · workflow · prompt yönetimi}};
+  \node[band, below=3.5mm of orch] (know)
+    {\textbf{KNOWLEDGE \& TOOLS}\\[1pt]{\scriptsize\color{softgray} vector DB · embedding · RAG · tool/MCP}};
+  \node[band, below=3.5mm of know, fill=accentdk, text=white, draw=accentdk] (model)
+    {\textbf{MODEL}\\[1pt]{\scriptsize\color{wash} LLM · fine-tune}};
+  \node[band, below=3.5mm of model] (serve)
+    {\textbf{DEPLOYMENT \& SERVING}\\[1pt]{\scriptsize\color{softgray} API · ölçekleme · cache}};
+  \node[band, below=3.5mm of serve] (infra)
+    {\textbf{INFRASTRUCTURE}\\[1pt]{\scriptsize\color{softgray} compute · GPU}};
+
+  % kesişen yan ray (eval · observability · safety)
+  \node[rail, anchor=north] (rail) at ([xshift=-52mm]app.north)
+    {\rotatebox{90}{\textbf{\color{warn}EVAL · OBSERVABILITY · SAFETY}}};
+\end{tikzpicture}}
+\end{center}
+
+\vspace{2pt}
+{\sffamily\bfseries\small\color{accentdk}Her katman → bu kitaptaki kavram(lar):}\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{34mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Katman} & {\sffamily\bfseries\small Bu kitaptaki kavram} \\
+\midrule
+\textbf{Application} & \term{Prompt} · \term{Intent} \\
+\textbf{Orchestration} & \term{Agent} · \term{Workflow} · \term{Router} \\
+\textbf{Knowledge \& Tools} & \term{RAG} · \term{Embedding} · \term{Tool Calling} · \term{MCP} · \term{Skill} \\
+\textbf{Model} & \term{LLM} · \term{Reasoning} · \term{Fine-tuning} · \term{Multimodal} \\
+\textbf{Deployment} & \term{API} · \en{caching} · \term{Maliyet \& Gecikme} \\
+\textbf{Infrastructure} & \en{compute} · \en{GPU} \\
+\midrule
+\textbf{Kesişen} & \term{Eval} · \term{Observability} · \term{Guardrails} \\
+\bottomrule
+\end{tabularx}
+
+\keyline{Atlası kullan: Bir aracı değerlendirirken adını değil \emph{katmanını} sor --- aynı katmandakiler birbirinin alternatifi, farklı katmandakiler tamamlayıcısıdır. Marka değişir, katman kalır. (İlke \#25)}

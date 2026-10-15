@@ -1,0 +1,159 @@
+% ======================================================================
+%  KAVRAM: Reasoning  (Tier 1)  — kompakt
+%  Chain of Thought / Reflection / Planning burada toplanır
+% ======================================================================
+
+\concept{Reasoning · Akıl Yürütme}{Reasoning}{Zor problemde modele cevaptan önce ``düşünme'' alanı vermek}
+
+\stage{1}{Problem}
+Çok adımlı, zor bir problemde modelden anında cevap istersen, yüzeysel ve sıklıkla
+yanlış sonuç alırsın --- model ``patlatır''. Karmaşık mantık, aritmetik ve planlama,
+ara adımlar olmadan tek hamlede doğru çözülmez.
+
+\keyline{Tek hamlede cevap istemek, birine zor bir soruyu \emph{müsvedde kâğıdı vermeden} sormak gibidir.}
+
+\stage{2}{Neden Var}
+Modele cevaptan önce ara adımlar üretme alanı vermek --- ``yüksek sesle düşünmek'' ---
+karmaşık görevlerde doğruluğu çarpıcı biçimde artırır. Reasoning desenleri bu
+düşünmeyi yapılandırır: adım adım çözme, kendini eleştirip düzeltme, önce plan yapma.
+
+\stage{3}{Tarihçe}
+\begin{timeline}
+\yr{2022} Chain of Thought: ``adım adım düşün'' \tlsep \yr{2022} ReAct: düşün → eyle → gözlemle \tlsep \yr{2023} reflection + planning: kendini eleştir, alt-adımlara böl \tlsep \yr{2024–26} reasoning modelleri: düşünme yerleşik
+\end{timeline}
+
+\stage{4}{Tanım}
+\begin{problembox}
+\textbf{Reasoning:} Modeli, nihai cevaba bağlanmadan önce ara adımlar üretmeye
+yönlendiren teknikler. \textbf{Chain of Thought (CoT):} adım adım düşün.
+\textbf{Reflection:} kendi çıktısını eleştir ve revize et. \textbf{Planning:}
+eyleme geçmeden önce alt-adımlara böl.
+\end{problembox}
+
+\stage{5}{Zihinsel Model}
+\begin{mentalbox}
+Anında cevap istemek, birini \textbf{müsvedde olmadan} zor soruya yanıt vermeye
+zorlamaktır. Reasoning ona şunları verir: bir \textbf{müsvedde kâğıdı} (CoT),
+bir \textbf{ikinci bakış} (Reflection) ve başlamadan önce bir \textbf{plan}
+(Planning). Yüksek sesle düşünmek modeli zor problemde akıllandırır --- ama
+token ve gecikmeye mal olur. Kolay soruda müsvedde israftır.
+\end{mentalbox}
+
+\stage{6}{Mimari Diyagram}
+Aynı soru, üç farklı yol. Sağa gittikçe daha çok ``düşünme'', daha çok maliyet.
+\vspace{3pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=4mm,
+   q/.style={draw=softgray, fill=white, rounded corners=6pt, minimum height=6.5mm,
+             minimum width=11mm, align=center, inner sep=2pt},
+   s/.style={draw=accent, fill=wash, rounded corners=2pt, minimum height=6.5mm,
+             minimum width=13mm, align=center, inner sep=2pt},
+   a/.style={draw=good, fill=good!10, rounded corners=2pt, minimum height=6.5mm,
+             minimum width=11mm, align=center, inner sep=2pt},
+   flow/.style={-{Stealth[length=1.6mm]}, accent, line width=0.7pt}]
+  % Direct
+  \node[q] (q1) {Soru};
+  \node[a, right=8mm of q1] (a1) {Cevap};
+  \draw[flow] (q1) -- (a1);
+  \node[left=2mm of q1, font=\sffamily\bfseries\tiny, text=ink] {DIRECT};
+
+  % CoT
+  \node[q, below=7mm of q1] (q2) {Soru};
+  \node[s, right=5mm of q2] (s2) {adım 1→2→3};
+  \node[a, right=5mm of s2] (a2) {Cevap};
+  \draw[flow] (q2) -- (s2); \draw[flow] (s2) -- (a2);
+  \node[left=2mm of q2, font=\sffamily\bfseries\tiny, text=ink] {CoT};
+
+  % Reflection
+  \node[q, below=7mm of q2] (q3) {Soru};
+  \node[s, right=5mm of q3] (d3) {taslak};
+  \node[s, right=5mm of d3] (c3) {eleştir};
+  \node[a, right=5mm of c3] (a3) {revize\\cevap};
+  \draw[flow] (q3) -- (d3); \draw[flow] (d3) -- (c3); \draw[flow] (c3) -- (a3);
+  \node[left=2mm of q3, font=\sffamily\bfseries\tiny, text=ink] {REFLECTION};
+
+  \draw[-{Stealth[length=2mm]}, softgray, line width=0.7pt]
+        ([xshift=6mm]a1.east) -- ++(0,-16mm)
+        node[midway, right, font=\sffamily\tiny, text=softgray, align=left]
+        {daha çok\\düşünme\\+ maliyet};
+\end{tikzpicture}
+\end{center}
+\keyline{Reasoning bedavaya gelmez: her ara adım token ve gecikmedir. Doğruluğu kazandığın yerde harca.}
+
+\stage{7}{Karar Çerçevesi}
+Hangi desen, ne zaman? Görevin zorluğu ve hatanın maliyeti belirler.\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{40mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Görev} & {\sffamily\bfseries\small Desen} \\
+\midrule
+Basit arama / sınıflandırma & \textbf{Direct} (reasoning yok) \\
+Çok adımlı mantık / aritmetik & \textbf{Chain of Thought} \\
+Hata pahalı, kalite kritik & \textbf{Reflection} (eleştir-düzelt) \\
+Araç dizisi / alt-hedef gerek & \textbf{Planning} \\
+\bottomrule
+\end{tabularx}
+
+\stage{8}{Üretim Senaryosu}
+\begin{prodbox}[Üretim Senaryosu · Yanlış Hesaplayan Asistan]
+\textbf{Bağlam.} Bir finans asistanı çok adımlı hesaplarda (vergi, indirim, toplam)
+sık sık yanlış sonuç veriyor --- doğru sayıları biliyor ama tek hamlede birleştirince
+hata yapıyor.
+
+\smallskip
+\textbf{Çözüm.} CoT etkinleştirilir: model önce adımları yazar (ara toplamlar,
+oranlar), sonra nihai sayıyı verir. Kritik akışlarda bir Reflection adımı
+sonucu bir kez denetler.
+
+\smallskip
+\textbf{Sonuç.} Çok adımlı hata oranı belirgin düşer. Bedeli: biraz daha fazla
+token --- yalnızca gerçekten zor akışlarda açıldığı için kabul edilebilir.
+\end{prodbox}
+
+\stage{9}{Anti-pattern}
+\begin{antibox}[Anti-pattern · ``Her Yere Reasoning / Aşırı Düşünme'']
+Basit görevlere bile CoT eklemek (boşa token ve gecikme); sonsuz reflection
+döngüleri; ya da ham düşünme zincirini kullanıcıya göstermek. ``Daha çok reasoning
+her zaman daha iyi'' sanmak.
+
+\smallskip
+\textbf{Belirti:} Basit cevaplar yavaş ve pahalı; bazen aşırı düşünüp basit işi bozuyor.\\
+\textbf{Kök neden:} Reasoning'in bir maliyeti olduğunu görmemek.\\
+\textbf{Düzeltme:} Reasoning'i zorluğa göre aç; basitte kapat; reflection'a sınır koy; ham zinciri kullanıcıdan gizle.
+\end{antibox}
+
+\stage{10}{Alternatifler \& Ödünleşimler}
+\vspace{2pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{26mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Desen} & {\sffamily\bfseries\small En iyi} & {\sffamily\bfseries\small Maliyet} \\
+\midrule
+\textbf{Direct} & Basit, tek adımlı & En düşük \\
+\addlinespace[2pt]
+\textbf{Chain of Thought} & Çok adımlı mantık & Orta (ara adımlar) \\
+\addlinespace[2pt]
+\textbf{Reflection} & Yüksek kalite gereği & Yüksek (2× geçiş) \\
+\addlinespace[2pt]
+\textbf{Planning} & Karmaşık, araçlı görev & Yüksek; agent'a yaklaşır \\
+\bottomrule
+\end{tabularx}
+
+\stage{11}{İlişkili Kavramlar}
+\term{Agent} (planning + eylem döngüsü) \tlsep \term{Chain of Thought} \tlsep
+\term{Reflection} \tlsep \term{Planning} \tlsep \term{Eval} (reasoning gerçekten iyileştirdi mi?)
+
+\stage{12}{Özet}
+\begin{itemize}
+  \item Reasoning, modele cevaptan önce ``düşünme'' alanı verir; zor görevde doğruluğu artırır.
+  \item CoT (adım adım), Reflection (eleştir-düzelt), Planning (önce böl).
+  \item Bedavaya gelmez: her ara adım token ve gecikmedir.
+  \item Zorluğa göre aç: basitte Direct, karmaşıkta CoT/Reflection/Planning.
+  \item ``Daha çok reasoning her zaman daha iyi'' yanlıştır.
+\end{itemize}
+
+\stage{13}{Mühendislik İlkesi}
+\begin{principlebox}
+\textbf{İlke \#10 — Düşünmenin bir bedeli vardır; zor problemde öde, kolayda ödeme.}\\[4pt]
+\normalsize Modele müsvedde kâğıdını ihtiyaç olduğunda ver. Gereksiz reasoning,
+yokluğu kadar pahalıya patlar.
+\end{principlebox}

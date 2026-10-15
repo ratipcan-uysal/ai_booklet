@@ -1,0 +1,17 @@
+% ======================================================================
+%  TIER 2 KARTI: Reasoning Models
+% ======================================================================
+
+\card{Reasoning Models}{düşünme yerleşik modeller}
+\cl{Problem} Bazı problemler o kadar çok adımlıdır ki prompt'la Chain-of-Thought
+eklemek bile yetmez veya kırılgan kalır --- model yine de acele eder.
+\cl{Tanım} \term{Reasoning model}, cevaptan önce kendi içinde uzun bir
+``düşünme'' adımı üreten ve bu yeteneği eğitimle kazanmış modeldir. CoT'yi sen
+istemeden, içeride yapar.
+\cl{Model} Sıradan model hızlı sezgiyle cevaplar; reasoning model ``biraz
+düşüneyim'' deyip arka planda müsvedde yapar, sonra konuşur.
+\cl{Ne zaman} Karmaşık matematik / mantık / planlama / kod; doğruluğun gecikme ve
+maliyetten \emph{önemli} olduğu yerde.
+\cl{Tuzak} Basit/hızlı işlere reasoning model koymak (yavaş + pahalı, gereksiz);
+ham düşünme zincirini kullanıcıya göstermek.
+\cl{İlişkili} \term{Reasoning} (CoT · Reflection · Planning) · \term{Maliyet \& Gecikme} · \term{Hangi Modeli Seçmeli?} \,{\scriptsize\color{softgray}(İlke \#10)}

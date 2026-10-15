@@ -1,0 +1,47 @@
+% ======================================================================
+%  APPENDIX C: Reading List
+% ======================================================================
+\clearpage
+\markboth{Reading List}{Reading List}
+\addcontentsline{toc}{chapter}{Appendix C · Reading List}
+\noindent\concepttag{Appendix C}\par
+\vspace{2pt}
+{\sffamily\bfseries\fontsize{25}{28}\selectfont Reading List\par}
+\vspace{2pt}\textcolor{accent}{\rule{34mm}{2pt}}\par
+\vspace{2pt}
+{\color{softgray}\small Bu kitabın kavramlarını derinleştirmek için temel kaynaklar. Önce neden okunacağı, sonra ne.}
+
+\newcommand{\rg}[1]{\vspace{7pt}\par\noindent
+  {\sffamily\bfseries\footnotesize\color{accentdk}\MakeUppercase{#1}}\par
+  \vspace{-2pt}\textcolor{hairline}{\rule{\linewidth}{0.6pt}}\vspace{1pt}}
+\newcommand{\rd}[2]{\par\vspace{2.5pt}\noindent\hangindent=6mm\hangafter=0
+  \textbf{#1} \,{\scriptsize\color{softgray}#2}\par}
+
+\rg{Pratik Kaynaklar (önce buraya bak)}
+\rd{Model sağlayıcılarının prompt \& tool-use rehberleri (cookbook'lar)}{En güncel, uygulanabilir desenler doğrudan kaynağından.}
+\rd{Eval \& observability araçlarının dokümantasyonu}{Pratik değerlendirme desenleri ve anti-pattern'ler genelde burada.}
+\rd{Vektör DB ve retrieval kütüphanelerinin kılavuzları}{Chunking, hybrid search ve re-ranking'i pratikte kurmak.}
+\rd{Agent / orkestrasyon framework dokümanları}{Workflow vs agent'ı somut kodda görmek.}
+
+\rg{Güncel Kalma}
+\rd{Model sağlayıcı mühendislik blogları}{Yeni yetenekler, fiyatlandırma ve sınırlar birincil ağızdan.}
+\rd{Pratisyen bültenleri ve topluluklar}{Alanın haftalık nabzı; neyin işe yarayıp yaramadığı.}
+\rd{Güvenlik / red-team toplulukları}{Prompt injection ve jailbreak'in güncel örnekleri.}
+
+\rg{Alanı Şekillendiren Dönüm Noktaları (bilmen yeter, okuman şart değil)}
+\rd{Transformer (2017) · GPT-3 few-shot (2020)}{Modern LLM'lerin ve in-context learning'in temeli.}
+\rd{RAG (2020) · RLHF/instruction tuning (2022)}{Retrieval + üretim; ve modeli hizalama.}
+\rd{Chain-of-Thought \& ReAct (2022)}{Akıl yürütme ve agent döngüsü fikirleri.}
+\rd{\itshape Derinleşmek istersen}{Bu fikirlerin orijinal makaleleri; ama teknik PM için kavramı bilmek yeterli.}
+
+\rg{Nasıl Okunmalı}
+\rd{Önce ``neden''i ara, sonra ``nasıl''ı}{Bir kavramın hangi problemi çözdüğünü anlamadan tekniğine dalma.}
+\rd{Araç değil, katman öğren}{Araçlar eskir; bu kitaptaki katmanlar ve ilkeler kalır. {\scriptsize(İlke \#25)}}
+\rd{Okuduğunu eval'le sına}{Bir teknik gerçekten işe yarıyor mu? Kendi golden dataset'inde ölç. {\scriptsize(İlke \#13)}}
+
+\vspace{10pt}
+\begin{center}
+{\sffamily\bfseries\color{accentdk}— Son —}\par
+\vspace{3pt}
+{\color{softgray}\itshape Kavramları değil, kavramların arkasındaki düşünme biçimini öğren.}
+\end{center}

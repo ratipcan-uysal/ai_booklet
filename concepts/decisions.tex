@@ -1,0 +1,190 @@
+% ======================================================================
+%  PART IV İÇERİĞİ: Engineering Decisions — karar atlası
+% ======================================================================
+
+\concept{Engineering Decisions}{Karar Atlası}{Mimari seçimleri sistematikleştiren karar ağaçları --- tek referansta}
+
+Çoğu AI mimari hatası, bir kararı \emph{atlamaktan} doğar. Aşağıdaki omurga,
+bir AI sistemi tasarlarken hangi soruları \textbf{hangi sırayla} sorman
+gerektiğini gösterir; ardından her karar tek satırlık kuralıyla özetlenir.
+
+% ---- Karar başlığı (kompakt) ----
+\newcommand{\dec}[2]{%
+  \vspace{6pt}\par\noindent
+  {\sffamily\bfseries\footnotesize\color{accent}KARAR #1}\,\,%
+  {\sffamily\bfseries\small\color{ink}#2}%
+  \hspace{4pt}\textcolor{hairline}{\leaders\hrule height 0.4pt\hfill}\par\vspace{2pt}}
+
+% ----------------------------------------------------------------------
+%  MASTER OMURGA
+% ----------------------------------------------------------------------
+\vspace{2pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\scriptsize, node distance=5.5mm,
+  gate/.style={draw=accent, line width=0.8pt, fill=wash, rounded corners=2pt,
+               minimum width=56mm, minimum height=9mm, align=center},
+  outc/.style={draw=softgray, line width=0.7pt, fill=white, rounded corners=2pt,
+               align=left, inner sep=3pt, minimum height=7mm, text width=44mm},
+  flow/.style={-{Stealth[length=2mm]}, accent, line width=0.9pt},
+  side/.style={-{Stealth[length=1.8mm]}, softgray, line width=0.7pt}]
+  \node[gate] (g1) {\textbf{1} · Bu iş gerçekten AI mı gerektiriyor?};
+  \node[gate, below=of g1] (g2) {\textbf{2} · Bilgi mi, davranış mı gerekiyor?};
+  \node[gate, below=of g2] (g3) {\textbf{3} · Adımlar önceden belli mi?};
+  \node[gate, below=of g3] (g4) {\textbf{4} · Dış dünyada eylem gerekiyor mu?};
+  \node[gate, below=of g4] (g5) {\textbf{5} · Düşünme / bellek gerekiyor mu?};
+  \node[draw=accentdk, line width=0.9pt, fill=accent!12, rounded corners=2pt,
+        minimum width=56mm, minimum height=9mm, align=center, below=of g5] (g6)
+        {\textbf{Her zaman} · Eval · Observability · Guardrails};
+
+  \foreach \a/\b in {g1/g2,g2/g3,g3/g4,g4/g5,g5/g6} \draw[flow] (\a)--(\b);
+
+  \node[outc, right=9mm of g1] (o1) {Hayır → \textbf{geleneksel kod}};
+  \node[outc, right=9mm of g2] (o2) {bilgi → \textbf{RAG} · davranış → \textbf{fine-tune}};
+  \node[outc, right=9mm of g3] (o3) {belli → \textbf{workflow} · değil → \textbf{agent}};
+  \node[outc, right=9mm of g4] (o4) {evet → \textbf{tool calling} (+ \textbf{MCP})};
+  \node[outc, right=9mm of g5] (o5) {\textbf{reasoning} · \textbf{memory}};
+  \foreach \g/\o in {g1/o1,g2/o2,g3/o3,g4/o4,g5/o5} \draw[side] (\g.east)--(\o.west);
+\end{tikzpicture}
+\end{center}
+\keyline{Kural: Yukarıdan aşağı in. Bir üst karar yanlışsa, altındaki her şey yanlış yerde optimize edilir.}
+
+% ----------------------------------------------------------------------
+\dec{1}{AI mı, geleneksel kod mu?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Durum} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Kural açıkça yazılabiliyor & \textbf{Kod} (ucuz, kesin) \\
+Çıktıda değişkenlik kabul edilemez & \textbf{Kod} / kısıtlı AI \\
+Muğlaklık · doğal dil · algı var & \textbf{AI} + guardrail + eval \\
+\bottomrule
+\end{tabularx}
+\keyline{Açıkça yazılabilen hiçbir şeyi modele yaptırma. → İlke \#1}
+
+% ----------------------------------------------------------------------
+\dec{2}{RAG mı, Fine-tune mı, Düz context mi?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Durum} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Bilgi büyük / sık değişiyor / kaynak gerek & \textbf{RAG} \\
+Bilgi küçük, tek oturumda sığıyor & \textbf{Düz context} \\
+Sabit stil / format / üslup gerek & \textbf{Fine-tune} \\
+\bottomrule
+\end{tabularx}
+\keyline{Bilgi → RAG, davranış → fine-tune. Önce prompt'u tüket. → İlke \#5, \#7}
+
+% ----------------------------------------------------------------------
+\dec{3}{Agent mı, Workflow mu?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Durum} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Adımlar önceden belli & \textbf{Workflow} \\
+Öngörülebilirlik / denetim kritik & \textbf{Workflow} \\
+Adımlar ancak çalışırken belli olur & \textbf{Agent} + sınır + eval \\
+\bottomrule
+\end{tabularx}
+\keyline{Varsayılan workflow. Agent'ı yalnızca gerçek belirsizlikte kullan. → İlke \#11, \#12}
+
+% ----------------------------------------------------------------------
+\dec{4}{Bir yeteneği nasıl vermeli?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small İhtiyaç} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Canlı veri / kesin işlem & \textbf{Tool calling} \\
+Statik bilgi yığını & \textbf{RAG} \\
+Sabit kural / küçük bağlam & \textbf{Prompt} \\
+\bottomrule
+\end{tabularx}
+\keyline{Eylem ve canlı veri → araç; modelin işi karar, kodun işi yapmak. → İlke \#6}
+
+% ----------------------------------------------------------------------
+\dec{5}{MCP mi, doğrudan function calling mi?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Durum} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Araç birçok uygulamada / ekosistem & \textbf{MCP} \\
+Tek uygulamada tek basit araç & \textbf{Doğrudan function calling} \\
+Hızlı prototip & \textbf{Doğrudan function calling} \\
+\bottomrule
+\end{tabularx}
+\keyline{Tekrar kullanım varsa MCP; sınırı her zaman sunucuda uygula. → İlke \#8}
+
+% ----------------------------------------------------------------------
+\dec{6}{Hangi reasoning deseni?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Görev} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Basit arama / sınıflandırma & \textbf{Direct} (reasoning yok) \\
+Çok adımlı mantık / aritmetik & \textbf{Chain of Thought} \\
+Hata pahalı, kalite kritik & \textbf{Reflection} \\
+Araç dizisi / alt-hedef & \textbf{Planning} \\
+\bottomrule
+\end{tabularx}
+\keyline{Düşünmenin bedeli var; zorlukla orantılı aç. → İlke \#10}
+
+% ----------------------------------------------------------------------
+\dec{7}{Hangi bellek türü?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Bilgi} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Yalnız bu tur gerekli & \textbf{Working} (context, saklama yok) \\
+Kullanıcı tercihi / gerçek & \textbf{Semantic} (long-term) \\
+Geçmiş etkileşim / olay & \textbf{Episodic} (long-term) \\
+\bottomrule
+\end{tabularx}
+\keyline{Seçici sakla, ilgiliyi getir, eskiyeni özetle/at. → İlke \#9}
+
+% ----------------------------------------------------------------------
+\dec{8}{Hangi eval yöntemi?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Çıktı / durum} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Nesnel, tek doğru cevap & \textbf{Metrik / tam eşleşme} \\
+Öznel kalite (özet, ton) & \textbf{LLM-judge} + rubric \\
+Yüksek risk / kritik & \textbf{İnsan değerlendirmesi} \\
+Ölçek + süreklilik & \textbf{Judge model} (otomatik) \\
+\bottomrule
+\end{tabularx}
+\keyline{Her değişikliği bağımsız golden dataset'te gate'le. → İlke \#13}
+
+% ----------------------------------------------------------------------
+\dec{9}{Yetkinliği nasıl paketlemeli?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small İhtiyaç} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Tek, net bir işlem (canlı veri) & \textbf{Tool} \\
+Çapraz-uygulama, tekrar kullanılan bağlantı & \textbf{MCP} \\
+Paketli, ihtiyaç anında yüklenen uzmanlık & \textbf{Skill} \\
+Kalıcı stil / format / davranış & \textbf{Fine-tune} \\
+\bottomrule
+\end{tabularx}
+\keyline{System prompt'u şişirme: ilgili olmayan yetkinliği context'e koyma. → İlke \#3, \#6}
+
+% ----------------------------------------------------------------------
+\dec{10}{Hangi modeli seçmeli?}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{46mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Durum} & {\sffamily\bfseries\small Seçim} \\
+\midrule
+Basit görev / yüksek hacim & \textbf{Küçük / ucuz model} \\
+Karmaşık / yüksek değer / düşük hacim & \textbf{Büyük / frontier model} \\
+İkisi birden & \textbf{Router} (kolayı küçüğe, zoru büyüğe) \\
+Gizlilik / kontrol kritik & \textbf{Açık / self-host model} \\
+\bottomrule
+\end{tabularx}
+\keyline{``En iyi model'' yoktur; göreve göre seç ve kaliteyi eval'le doğrula. → İlke \#17}
+
+\vspace{8pt}
+\begin{principlebox}
+\textbf{Atlası kullan:} Yeni bir özellik tasarlarken bu on kararı sırayla geç.
+Çoğu ``model kötü'' şikâyeti, aslında üst sıradaki bir kararın (AI mı gerekli?
+bilgi mi davranış mı?) yanlış verilmesidir.
+\end{principlebox}

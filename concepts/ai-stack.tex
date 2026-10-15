@@ -1,0 +1,72 @@
+% ======================================================================
+%  ÖZEL BÖLÜM: Modern AI Stack — tam sayfa poster
+% ======================================================================
+
+\concept{Temel · Foundations}{Modern AI Stack}{Bir AI sisteminin katmanları: tek bir zihinsel modelde}
+
+Bir AI sistemi tek bir ``model çağrısı'' değildir. Bir kullanıcı niyetinden bir
+eyleme uzanan bir \emph{katmanlar dizisidir} --- ve her katmanı bu kitapta bir
+derin kavram işler. Aşağıdaki poster, kitabın tamamının haritasıdır.
+
+\vspace{4pt}
+\begin{center}
+\begin{tikzpicture}[font=\sffamily\small,
+  layer/.style={draw=accent, line width=0.9pt, fill=wash, rounded corners=3pt,
+                minimum width=62mm, minimum height=12mm, align=center},
+  flow/.style={-{Stealth[length=2.6mm]}, accent, line width=1pt},
+  rail/.style={draw=accentdk, line width=0.8pt, fill=accent!12, rounded corners=3pt,
+               minimum width=13mm, minimum height=92mm}]
+
+  % --- merkez akış ---
+  \node[layer, fill=white, draw=softgray] (user)
+    {\textbf{USER}\\[1pt]{\scriptsize\color{softgray} kullanıcı bir niyetle gelir}};
+  \node[layer, below=4mm of user] (intent)
+    {\textbf{INTENT}\\[1pt]{\scriptsize\color{softgray} niyeti anla · doğru yola yönlendir}};
+  \node[layer, below=4mm of intent] (ctx)
+    {\textbf{CONTEXT}\\[1pt]{\scriptsize\color{softgray} doğru bilgiyi pencereye koy}};
+  \node[layer, below=4mm of ctx, fill=accentdk, text=white, draw=accentdk] (llm)
+    {\textbf{LLM}\\[1pt]{\scriptsize\color{wash} akıl yürüt ve üret}};
+  \node[layer, below=4mm of llm] (tools)
+    {\textbf{TOOLS}\\[1pt]{\scriptsize\color{softgray} dış dünyada eyle}};
+  \node[layer, below=4mm of tools] (mem)
+    {\textbf{MEMORY}\\[1pt]{\scriptsize\color{softgray} hatırla · sonraki tura taşı}};
+  \node[layer, below=4mm of mem, fill=good!10, draw=good] (out)
+    {\textbf{ÇIKTI}\\[1pt]{\scriptsize\color{softgray} cevap veya eylem}};
+
+  \foreach \a/\b in {user/intent, intent/ctx, ctx/llm, llm/tools, tools/mem, mem/out}
+    \draw[flow] (\a) -- (\b);
+
+  % --- yan raylar (her katmanı kuşatır) ---
+  \node[rail, anchor=north] (ev) at ([xshift=-40mm]user.north)
+    {\rotatebox{90}{\textbf{EVALUATION} · kaliteyi ölç}};
+  \node[rail, anchor=north] (ob) at ([xshift=40mm]user.north)
+    {\rotatebox{90}{\textbf{OBSERVABILITY} · ne olduğunu gör}};
+
+  % --- alt kuşak: guardrails ---
+  \node[draw=warn, line width=0.9pt, fill=warmwash, rounded corners=3pt,
+        minimum width=136mm, minimum height=8mm, below=5mm of out.south,
+        anchor=north, font=\sffamily\small] (g)
+    {\textbf{\color{warn}GUARDRAILS \& SAFETY} \,·\, tüm sistemi kuşatır};
+\end{tikzpicture}
+\end{center}
+
+\vspace{2pt}
+{\sffamily\bfseries\small\color{accentdk}Her katman → işleyen derin kavram(lar):}\par
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{26mm} L@{}}
+\arrayrulecolor{hairline}\toprule
+\textbf{INTENT} & \term{Prompt} · \term{Router} \\
+\textbf{CONTEXT} & \term{Context Engineering} · \term{Embedding} · \term{RAG} · \term{Memory} \\
+\textbf{LLM} & \term{Prompt} · \term{Reasoning} · \term{Fine-tuning} \\
+\textbf{TOOLS} & \term{Tool Calling} · \term{MCP} \\
+\textbf{MEMORY} & \term{Memory} \\
+\textbf{Kuşatan} & \term{Eval} · \term{Observability} · \term{Guardrails} \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+\begin{principlebox}
+\textbf{Stack'i oku:} İstek yukarıdan aşağı akar (kullanıcı → eylem). Eval ve
+Observability \emph{her} katmanı dikey olarak kuşatır; Guardrails tüm sistemi
+çevreler. Bir AI sorununu teşhis ederken önce ``hangi katman?'' diye sor.
+\end{principlebox}

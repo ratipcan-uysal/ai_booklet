@@ -1,0 +1,49 @@
+% ======================================================================
+%  PART VII İÇERİĞİ (devam): Yapı Taşları başvuru tablosu
+% ======================================================================
+
+\concept{Reference · Başvuru}{Yapı Taşları:\\Hangisi Ne Zaman?}{Tool · Skill · MCP · Agent · Subagent --- en sık karıştırılan dörtlü, net ayrımıyla}
+
+En sık karışan kavramlar bunlardır --- çünkü \emph{iki farklı eksende} yaşarlar.
+Doğru soru ``hangisi?'' değil, önce \textbf{hangi eksen?}:
+
+\begin{itemize}
+  \item \textbf{Yetenek verme} (model \emph{karar vermez}; kim çalıştırır / nasıl paketlenir / nasıl bağlanır): \term{Tool} · \term{Skill} · \term{MCP}
+  \item \textbf{Karar devretme} (kararı \emph{modele bırakırsın}; döngü / delegasyon): \term{Agent} · \term{Subagent}
+\end{itemize}
+
+\vspace{2pt}
+\noindent\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{24mm} L L@{}}
+\arrayrulecolor{hairline}\toprule
+{\sffamily\bfseries\small Yapı taşı} & {\sffamily\bfseries\small Ne} & {\sffamily\bfseries\small Ne zaman} \\
+\midrule
+\multicolumn{3}{@{}l}{\cellcolor{wash}{\sffamily\bfseries\footnotesize\color{accentdk}~YETENEK VERME · karar VERMEZ}} \\
+\addlinespace[3pt]
+\textbf{Tool} & Tek fonksiyon çağrısı & Canlı veri / kesin işlem \\
+\arrayrulecolor{hairline}\cmidrule[0.2pt]{1-3}
+\textbf{Skill} & Paketli yetkinlik (talimat + script) & Tekrar eden, paketlenebilir uzmanlık \\
+\cmidrule[0.2pt]{1-3}
+\textbf{MCP} & Araç bağlama standardı (protokol) & Araç çok uygulamada kullanılacak \\
+\addlinespace[4pt]
+\multicolumn{3}{@{}l}{\cellcolor{wash}{\sffamily\bfseries\footnotesize\color{accentdk}~KARAR DEVRETME · karar VERİR}} \\
+\addlinespace[3pt]
+\textbf{Agent} & Hedef + araç + döngü; adımları seçer & Adımlar önceden bilinemiyor \\
+\cmidrule[0.2pt]{1-3}
+\textbf{Subagent} & Alt-görevi devralan ayrı agent & Büyük görevi parçalara bölmek \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+{\sffamily\bfseries\small\color{accentdk}En sık karıştırılanlar:}
+\begin{itemize}
+  \item \textbf{MCP $\neq$ Agent} --- MCP bir bağlantı katmanıdır, karar vermez; bir \emph{workflow} da MCP kullanır. MCP'li olmak agent olmak demek değildir.
+  \item \textbf{Skill $\neq$ Tool} --- Skill, talimat + kaynak içeren bir \emph{paket}tir; tool tek bir fonksiyondur. Bir skill içinde araçlar olabilir.
+  \item \textbf{Skill $\neq$ Agent} --- Skill bir \emph{yetenektir}; agent onu \emph{kullanan döngüdür}.
+  \item \textbf{Subagent $\neq$ Multi-Agent} --- Subagent bir parent'a bağlıdır; \term{Multi-Agent} eş düzey, koordine agent'lardır.
+\end{itemize}
+
+\begin{principlebox}
+\textbf{Önce ekseni sor:} ``Kararı mı devrediyorum (agent · subagent), yoksa yetenek
+mi veriyorum (tool · skill · mcp)?'' Çoğu karışıklık, bu iki ekseni birbirine
+karıştırmaktan doğar --- ve ``her şeyi agent yapmak'' bunun en pahalı sonucudur.
+\end{principlebox}

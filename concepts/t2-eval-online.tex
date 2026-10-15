@@ -1,0 +1,20 @@
+% ======================================================================
+%  TIER 2 KARTI: Offline vs Online Eval
+% ======================================================================
+
+\card{Offline vs Online Eval}{yayından önce ölç, yayından sonra öğren}
+\cl{Problem} Golden dataset'te iyi skor almak yeterli mi? Gerçek kullanıcılar
+farklı davranır. İki ayrı soru vardır: ``yayına hazır mı?'' ve ``gerçekte işe
+yarıyor mu?'' --- ve bunlar farklı ölçümler ister.
+\cl{Tanım} \textbf{Offline eval}: sabit golden dataset'te, yayından \emph{önce}
+(hızlı, ucuz, regression yakalar). \textbf{Online eval}: gerçek trafikte, yayından
+\emph{sonra} (A/B test, kullanıcı geri bildirimi, gerçek metrikler).
+\cl{Model} Offline = simülatörde uçuş provası; online = gerçek yolcularla uçuş.
+İkisi de gerekir; biri diğerinin yerini tutmaz.
+\cl{Akış} Her değişiklik önce offline gate'ten geçer → sonra canary/A-B ile online
+denenir. Online sinyaller (kabul oranı, düzeltme, terk) → yeni golden örnekler (flywheel).
+\cl{``Yeterince iyi'' nedir} Kalite çıtası bir \emph{ürün kararıdır} --- \%100 değil,
+hatanın maliyeti ile kullanışlılığın dengesi. Bunu PM tanımlar.
+\cl{Tuzak} Yalnız offline'a güvenmek (gerçek dünya farklıdır); ya da yalnız online
+(yavaş, riskli --- regression'ı canlıda öğrenirsin).
+\cl{İlişkili} \term{Eval} · \term{Canary} · \term{Shadow Testing} · \term{Observability} · \term{Veri \& Gizlilik} (flywheel) \,{\scriptsize\color{softgray}(İlke \#13, \#18)}
